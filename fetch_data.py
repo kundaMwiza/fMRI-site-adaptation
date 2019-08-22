@@ -29,12 +29,13 @@ data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 def main():
 
         parser = argparse.ArgumentParser(description='Download ABIDE data and compute functional connectivity matrices')
-        parser.add_argument('--pipeline', default='cpac', type=str, help='Pipeline to preprocess ABIDE data')
-        parser.add_argument('--atlas', default='cc200', help='Brain parcellation atlas. Options: ho, cc200, cc400 (default: cc200)')
+        parser.add_argument('--pipeline', default='cpac', type=str, help='Pipeline to preprocess ABIDE data. Available options are ccs, cpac, dparsf and niak.'
+                                                                        ' default: cpac.')
+        parser.add_argument('--atlas', default='cc200', help='Brain parcellation atlas. Options: ho, cc200 and cc400, default: cc200.')
         parser.add_argument('--connectivity', default='correlation', type=str, help='Type of connectivity used for network '
-                                                                        'construction (default: correlation, '
+                                                                        'construction '
                                                                         'options: correlation, partial correlation, '
-                                                                        'covariance)')
+                                                                        'covariance, default: correlation.')
         args = parser.parse_args()
         print(args)
 

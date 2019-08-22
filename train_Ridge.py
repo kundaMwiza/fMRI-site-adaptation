@@ -65,8 +65,10 @@ def process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, valida
 def grid_search(params, train_ind, test_ind, features, y, phenotype_ft=None, domain_ft=None):
     
     # MIDA parameter search
-    mu_vals = [0.5, 0.75, 1.0]
-    h_vals = [50, 150, 300]
+    # mu_vals = [0.5, 0.75, 1.0]
+    mu_vals = [1.0]
+    # h_vals = [50, 150, 300]
+    h_vals = [50]
 
     # Add phenotypes or not
     add_phenotypes = params['phenotypes']
@@ -138,6 +140,7 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
     atlas = params['atlas']
     num_domains = params['num_domains']
     validation_ext = params['validation_ext']
+    filename = params['filename']
 
     for i in range(num_domains):
         k = i
@@ -316,23 +319,21 @@ def str2bool(v):
 
 def main():
 
-    parser = argparse.ArgumentParser(description='Classification of the ABIDE dataset using a Ridge classifier'
+    parser = argparse.ArgumentParser(description='Classification of the ABIDE dataset using a Ridge classifier. '
                                                 'MIDA is used to minimize the distribution mismatch between ABIDE sites')
-    parser.add_argument('--atlas', default='cc200', help='Atlas for network construction (node definition) options: ho, cc200, cc400 (default: cc200), '
-                                                    'see preprocessed-connectomes-project.org/abide/Pipelines.html '
-                                                    'for more options )')
-    parser.add_argument('--model', default='MIDA', type=str, help='Options: MIDA, raw. (default MIDA)')
-    parser.add_argument('--algorithm', default='Ridge', type=str, help='Options: Ridge, LR (Logistic regression), SVM (Support vector machine). (default Ridge)')
-    parser.add_argument('--phenotypes', default=True, type=str2bool, help='Add phenotype features (default True)')
+    parser.add_argument('--atlas', default='cc200', help='Atlas for network construction (node definition) options: ho, cc200, cc400, default: cc200.')
+    parser.add_argument('--model', default='MIDA', type=str, help='Options: MIDA, raw. default: MIDA.')
+    parser.add_argument('--algorithm', default='Ridge', type=str, help='Options: Ridge, LR (Logistic regression),' 
+                                                                        ' SVM (Support vector machine). default: Ridge.')
+    parser.add_argument('--phenotypes', default=True, type=str2bool, help='Add phenotype features. default: True.')
     parser.add_argument('--KHSIC', default=False, type=str2bool, help='Compute kernel statistical test of independence between features'
-                                                        'and site (default True)')
-    parser.add_argument('--seed', default=1234, type=int, help='Seed for random initialisation (default: 1234)')
+                                                        ' and site, default True.')
+    parser.add_argument('--seed', default=1234, type=int, help='Seed for random initialisation. default: 1234.')
     parser.add_argument('--connectivity', default='tangent', type=str, help='Type of connectivity used for network '
-                                                                    'construction (default: tangent, '
-                                                                    'options: correlation, partial correlation, '
-                                                                    'tangent)')
-    parser.add_argument('--leave_one_out', default='False', type=str2bool, help='leave one site out CV instead of 10CV')
-    parser.add_argument('--filename', default='tangent', type=str, help='results output file')
+                                                                    'construction. options: correlation, partial correlation,'
+                                                                    'tangent, default: tangent.')
+    parser.add_argument('--leave_one_out', default='False', type=str2bool, help='leave one site out CV instead of 10CV. default: False.')
+    parser.add_argument('--filename', default='tangent', type=str, help='filename for output file. default: tangent.')
 
     args = parser.parse_args()  
     print('Arguments: \n', args)
