@@ -85,7 +85,7 @@ def grid_search(params, train_ind, test_ind, features, y, phenotype_ft=None, dom
     best_model['acc'] = 0
 
     # Grid search formulation
-    if algorithm in ['LR', 'SVM']:
+    if algorithm in ['LR', 'SVM']:            
         C_vals = [1, 5, 10]
         if algorithm == 'LR':
             max_iter_vals = [100000]
@@ -95,7 +95,7 @@ def grid_search(params, train_ind, test_ind, features, y, phenotype_ft=None, dom
             alg = LinearSVC(random_state=seed)
         parameters = {'C': C_vals, 'max_iter': max_iter_vals}
     else:
-        alpha_vals = [0.5, 0.75, 1.0]
+        alpha_vals = [0.25, 0.5, 0.75]
         parameters = {'alpha': alpha_vals}
         alg = RidgeClassifier(random_state=seed)
     
@@ -208,7 +208,7 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
     all_results = pd.DataFrame()
     all_results['ACC'] = results_acc
     all_results['AUC'] = results_auc
-    all_results.to_csv(filename + 'LOCV' + '.csv')
+    all_results.to_csv(filename + '.csv')
 
 # 10 fold CV 
 def train(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, phenotype_raw):
@@ -303,7 +303,7 @@ def train(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, 
     all_results = pd.DataFrame()
     all_results['ACC'] = results_acc
     all_results['AUC'] = results_auc
-    all_results.to_csv('/Users/mrwiz/Desktop/Google Drive/' +filename+'.csv')
+    all_results.to_csv(filename+'.csv')
 
 # Process boolean command line arguments
 def str2bool(v):
@@ -331,9 +331,11 @@ def main():
     parser.add_argument('--connectivity', default='tangent', type=str, help='Type of connectivity used for network '
                                                                     'construction. options: correlation, partial correlation,'
                                                                     'tangent, default: tangent.')
-    parser.add_argument('--leave_one_out', default='False', type=str2bool, help='leave one site out CV instead of 10CV. default: False.')
+    parser.add_argument('--leave_one_out', default=False, type=str2bool, help='leave one site out CV instead of 10CV. default: False.')
     parser.add_argument('--filename', default='tangent', type=str, help='filename for output file. default: tangent.')
-
+    parser.add_argument('--grid_search', default=False, type=str2bool, help='5 fold CV grid search on training fold'
+                                                                            'to tune parameters')
+    
     args = parser.parse_args()  
     print('Arguments: \n', args)
 
@@ -343,6 +345,7 @@ def main():
     params['model'] = args.model                    # MIDA, SMIDA or raw
     params['phenotypes'] = args.phenotypes          # Add phenotype features 
     params['seed'] = args.seed                      # seed for random initialisation
+    params['grid_search'] = args.grid_search        # grid search True or False
     
     # Algorithm choice
     params['algorithm'] = args.algorithm    
