@@ -22,9 +22,19 @@ import sys
 
 # Input data variables
 # root_folder = r'/content/drive/My Drive/population-gcn/Data/'
-# root_folder = '/Users/mrwiz/Downloads/population-gcn-master/gcn/Data/'
-root_folder = r'path/to/data'
+root_folder = '/Users/mrwiz/Downloads/population-gcn-master/gcn/Data/'
+# root_folder = r'path/to/data'
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
+
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 def main():
 
@@ -36,6 +46,7 @@ def main():
                                                                         'construction '
                                                                         'options: correlation, partial correlation, '
                                                                         'covariance, default: correlation.')
+        parser.add_argument('--download', default=True, type=str2bool, help='Dowload data or just compute functional connectivity. default: True')
         args = parser.parse_args()
         print(args)
 
@@ -44,6 +55,7 @@ def main():
         pipeline = args.pipeline
         atlas = args.atlas
         connectivity = args.connectivity
+        download = args.download
 
         # Files to fetch
         
@@ -57,9 +69,9 @@ def main():
         shutil.copyfile('./subject_IDs.txt', os.path.join(data_folder, 'subject_IDs.txt'))
 
         # Download database files
-
-        abide = datasets.fetch_abide_pcp(data_dir=root_folder, pipeline=pipeline,
-                                        band_pass_filtering=True, global_signal_regression=False, derivatives=files, quality_checked=False)                                
+        if download == True:
+                abide = datasets.fetch_abide_pcp(data_dir=root_folder, pipeline=pipeline,
+                                                band_pass_filtering=True, global_signal_regression=False, derivatives=files, quality_checked=False)                                
 
         subject_IDs = Reader.get_ids()
         subject_IDs = subject_IDs.tolist()

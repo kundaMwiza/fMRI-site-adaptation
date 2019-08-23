@@ -122,7 +122,7 @@ def subject_connectivity(timeseries, subjects, atlas_name, kind, iter_no='', see
                 connectivity_fit = conn_measure.fit(conn_mat)
                 connectivity = connectivity_fit.transform(conn_mat)
             else:
-                conn_measure = connectome.ConnectivityMeasure(kind='tangent')
+                conn_measure = connectivity_matrices.ConnectivityMeasure(kind='tangent')
                 connectivity_fit = conn_measure.fit(timeseries)
                 connectivity = connectivity_fit.transform(timeseries)
             

@@ -65,10 +65,8 @@ def process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, valida
 def grid_search(params, train_ind, test_ind, features, y, phenotype_ft=None, domain_ft=None):
     
     # MIDA parameter search
-    # mu_vals = [0.5, 0.75, 1.0]
-    mu_vals = [1.0]
-    # h_vals = [50, 150, 300]
-    h_vals = [50]
+    mu_vals = [0.5, 0.75, 1.0]
+    h_vals = [50, 150, 300]
 
     # Add phenotypes or not
     add_phenotypes = params['phenotypes']
@@ -97,7 +95,7 @@ def grid_search(params, train_ind, test_ind, features, y, phenotype_ft=None, dom
             alg = LinearSVC(random_state=seed)
         parameters = {'C': C_vals, 'max_iter': max_iter_vals}
     else:
-        alpha_vals = [0.25, 0.5, 0.75]
+        alpha_vals = [0.5, 0.75, 1.0]
         parameters = {'alpha': alpha_vals}
         alg = RidgeClassifier(random_state=seed)
     
@@ -164,8 +162,9 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
             best_model.pop('mu')
             best_model.pop('h')
         else:
-            print('best parameters from 5CV grid search: \n', best_model)
             best_model = grid_search(params, train_ind, test_ind, features, y)
+            print('best parameters from 5CV grid search: \n', best_model)
+
             x_data = features
         
         # Remove accuracy key from best model dictionary
@@ -297,14 +296,14 @@ def train(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, 
     print("standard deviation auc", std_auc)
 
     # compute statistical test of independence
-    if params['KHSIC'] == True:
+    if params['KHSIC'] == True and model == 'MIDA':
         test_stat, threshold = KHSIC.hsic_gam(features, domain_ft, alph = 0.05)
         print('KHSIC sample value: %.2f' % test_stat,'Threshold: %.2f' % threshold) 
 
     all_results = pd.DataFrame()
     all_results['ACC'] = results_acc
     all_results['AUC'] = results_auc
-    all_results.to_csv(filename+'.csv')
+    all_results.to_csv('/Users/mrwiz/Desktop/Google Drive/' +filename+'.csv')
 
 # Process boolean command line arguments
 def str2bool(v):
@@ -326,7 +325,7 @@ def main():
     parser.add_argument('--algorithm', default='Ridge', type=str, help='Options: Ridge, LR (Logistic regression),' 
                                                                         ' SVM (Support vector machine). default: Ridge.')
     parser.add_argument('--phenotypes', default=True, type=str2bool, help='Add phenotype features. default: True.')
-    parser.add_argument('--KHSIC', default=False, type=str2bool, help='Compute kernel statistical test of independence between features'
+    parser.add_argument('--KHSIC', default=True, type=str2bool, help='Compute kernel statistical test of independence between features'
                                                         ' and site, default True.')
     parser.add_argument('--seed', default=1234, type=int, help='Seed for random initialisation. default: 1234.')
     parser.add_argument('--connectivity', default='tangent', type=str, help='Type of connectivity used for network '
