@@ -34,9 +34,6 @@ from sklearn.preprocessing import StandardScaler
 warnings.filterwarnings("ignore")
 
 # Input data variables
-root_folder = '/Users/mrwiz/Downloads/population-gcn-master/gcn/Data/'
-# root_folder = 'G:/My Drive/data/'
-# root_folder = 'C:/Users/mrwiz/Desktop/Google Drive/data/data'
 
 # root_folder = r'path/to/data/'
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
@@ -122,7 +119,7 @@ def subject_connectivity(timeseries, subjects, atlas_name, kind, iter_no='', see
                 connectivity_fit = conn_measure.fit(conn_mat)
                 connectivity = connectivity_fit.transform(conn_mat)
             else:
-                conn_measure = connectivity_matrices.ConnectivityMeasure(kind='tangent')
+                conn_measure = connectome.ConnectivityMeasure(kind='tangent')
                 connectivity_fit = conn_measure.fit(timeseries)
                 connectivity = connectivity_fit.transform(timeseries)
             
@@ -249,11 +246,11 @@ def get_networks(subject_list, kind, iter_no='', seed=1234, validation_ext='10CV
         matrix = sio.loadmat(fl)[variable]
         all_networks.append(matrix)
     
-    if kind == 'timetangent':
+    if kind not in ['timetangent', 'tangent']:
         norm_networks = [mat for mat in all_networks]
     else:
         norm_networks = [np.arctanh(mat) for mat in all_networks]
-   
+
     idx = np.triu_indices_from(all_networks[0], 1)
     vec_networks = [mat[idx] for mat in norm_networks]
     matrix = np.vstack(vec_networks)

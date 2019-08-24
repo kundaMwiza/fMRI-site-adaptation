@@ -1,6 +1,7 @@
 import time
 import warnings
 import os
+import sys
 import argparse
 import pandas as pd
 import numpy as np
@@ -22,10 +23,9 @@ from nilearn import connectome
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import GridSearchCV
 import warnings
+import preprocess_data__MWIZA as Reader_2
 
-
-# root_folder = r'path/to/data'
-root_folder = '/Users/mrwiz/Downloads/population-gcn-master/gcn/Data/'
+root_folder = r'path/to/data'
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 
 # Transform test data using the transformer learned on the training data
@@ -155,6 +155,9 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
                 features = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind=connectivity, atlas_name=atlas)
 
         if params['model'] == 'MIDA':
+            features_2 = Reader_2.get_networks(subject_IDs, iter_no=k, kind=params['connectivity'], atlas_name=params['atlas'])
+            print(features_2 == features)
+            sys.exit()
             domain_ft = MIDA.site_information_mat(phenotype_raw, num_subjects, num_domains)
             best_model = grid_search(params, train_ind, test_ind, features, y, domain_ft=domain_ft)
             print('best parameters from 5CV grid search: \n', best_model)
@@ -358,12 +361,6 @@ def main():
     atlas = args.atlas                              # Atlas for network construction (node definition)
     connectivity = args.connectivity                # Type of connectivity used for network construction
 
-    if atlas == 'cc200':
-        params['num_rois'] = 200
-    elif atlas == 'ho':
-        params['num_rois'] = 110
-    elif atlas == 'cc400':
-        params['num_rois'] = 392
     
     # 10 Fold CV or leave one site out CV
     params['leave_one_out'] = args.leave_one_out
