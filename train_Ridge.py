@@ -13,6 +13,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 import sklearn.metrics
 import scipy.io as sio
+import scipy.stats as sc
 import preprocess_data as Reader
 import KHSIC as KHSIC
 import MIDA as MIDA
@@ -21,11 +22,12 @@ from sklearn.linear_model import RidgeClassifier
 from sklearn import svm
 from nilearn import connectome
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import GridSearchCV
 import warnings
-import preprocess_data__MWIZA as Reader_2
+warnings.filterwarnings("ignore")
 
-root_folder = r'path/to/data'
+root_folder = '/Users/mrwiz/Downloads/population-gcn-master/gcn/Data/'
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 
 # Transform test data using the transformer learned on the training data
@@ -92,7 +94,7 @@ def grid_search(params, train_ind, test_ind, features, y, phenotype_ft=None, dom
             alg = LogisticRegression(random_state=seed, solver='lbfgs')
         else:
             max_iter_vals = [100000]
-            alg = LinearSVC(random_state=seed)
+            alg = svm.SVC(kernel='linear', random_state=seed)
         parameters = {'C': C_vals, 'max_iter': max_iter_vals}
     else:
         alpha_vals = [0.25, 0.5, 0.75]
@@ -126,6 +128,123 @@ def grid_search(params, train_ind, test_ind, features, y, phenotype_ft=None, dom
     
     return best_model
 
+def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, phenotype_raw):
+    results_acc = []
+    results_auc = []
+
+    algorithm = params['algorithm']
+    seed = params['seed']
+    atlas = params['atlas']
+    num_domains = params['num_domains']
+    validation_ext = params['validation_ext']
+    filename = params['filename']
+    connectivities = {0: 'correlation', 1: 'tangent pearson', 2: 'timetangent'}
+    features_c = Reader.get_networks(subject_IDs, iter_no='', kind='correlation', atlas_name=atlas)
+
+    for i in range(num_domains):
+        k = i
+        train_ind = np.where(phenotype_raw[:, 1] != i)[0]
+        test_ind = np.where(phenotype_raw[:, 1] == i)[0]
+
+        # load tangent pearson features
+        try:
+            features_t = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind='tangent', atlas_name=atlas)
+        except FileNotFoundError:
+            print("Tangent features not found. reloading timeseries data")
+            time.sleep(10)
+            params['connectivity'] = 'tangent'
+            process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext)
+            features_t = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind=connectivity, atlas_name=atlas)
+        
+        # load tangent timeseries features
+        try:
+            features_tt = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind='timetangent', atlas_name=atlas)
+        except FileNotFoundError:
+            print("Tangent features not found. reloading timeseries data")
+            time.sleep(10)
+            params['connectivity'] = 'timetangent'
+            process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext)
+            features_tt = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind=connectivity, atlas_name=atlas)
+        
+        # all loaded features
+        features = [features_c, features_t, features_tt]
+        
+        all_best_models = []
+        x_data_ft = []
+        if params['model'] == 'MIDA':
+            domain_ft = MIDA.site_information_mat(phenotype_raw, num_subjects, num_domains)
+            for ft in range(3):
+                best_model = grid_search(params, train_ind, test_ind, features[ft], y, domain_ft=domain_ft)
+                print('for', connectivities[ft], ', best parameters from 5CV grid search are: \n', best_model)
+                x_data = MIDA.MIDA(features[ft], domain_ft, mu=best_model['mu'], h=best_model['h'], labels=False)
+                best_model.pop('mu')
+                best_model.pop('h')
+                best_model.pop('acc')
+                all_best_models.append(best_model)
+                x_data_ft.append(x_data)
+
+        else:
+            for ft in range(3):
+                best_model = grid_search(params, train_ind, test_ind, features[ft], y)
+                print('best parameters from 5CV grid search are: \n', best_model)
+                best_model.pop('acc')
+                all_best_models.append(best_model)
+                x_data_ft.append(features[ft])
+
+        
+        algs = []
+        preds_binary = []
+        preds_decision = []
+
+        # fit and compute predictions from all three models
+        for ft in range(3):
+            if algorithm == 'LR':
+                clf = LogisticRegression(random_state=seed, solver='lbfgs', **all_best_models[ft])
+            elif algorithm == 'SVM':
+                clf = svm.SVC(kernel='linear', random_state=seed, **all_best_models[ft])
+            else:
+                clf = RidgeClassifier(random_state=seed, **all_best_models[ft])
+            
+            algs.append(clf.fit(x_data_ft[ft][train_ind], y[train_ind].ravel()))
+            preds_binary.append(clf.predict(x_data_ft[ft][test_ind]))
+            preds_decision.append(clf.decision_function(x_data_ft[ft][test_ind]))
+        
+        # mode prediciton
+        mode_predictions = sc.mode(np.hstack([preds_binary[j][np.newaxis].T for j in range(3)]), axis = 1)[0].ravel()
+
+        # Compute the accuracy
+        lin_acc = accuracy_score(y[test_ind].ravel(), mode_predictions)
+
+        # mean decision score
+        mean_predictions = np.hstack([preds_decision[j][:, np.newaxis] for j in range(3)]).mean(axis=1)
+
+        # Compute the AUC
+        lin_auc = sklearn.metrics.roc_auc_score(y[test_ind], mean_predictions)
+        
+        # append accuracy and AUC to respective lists
+        results_acc.append(lin_acc)
+        results_auc.append(lin_auc)
+        print("-"*100)
+        print("Fold number: %d" % k)
+        print("Linear Accuracy: " + str(lin_acc))
+        print("Linear AUC: "+str(lin_auc))
+        print("-"*100)
+
+    avg_acc = np.array(results_acc).mean()  
+    std_acc = np.array(results_acc).std()
+    avg_auc = np.array(results_auc).mean()
+    std_auc = np.array(results_auc).std()
+    print("accuracy average", avg_acc)
+    print("standard deviation accuracy", std_acc)
+    print("auc average", avg_auc)
+    print("standard deviation auc", std_auc)
+
+    all_results = pd.DataFrame()
+    all_results['ACC'] = results_acc
+    all_results['AUC'] = results_auc
+    all_results.to_csv(filename + '.csv')
+
+
 # leave one site out application performance
 def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, phenotype_raw):
 
@@ -155,9 +274,6 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
                 features = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind=connectivity, atlas_name=atlas)
 
         if params['model'] == 'MIDA':
-            features_2 = Reader_2.get_networks(subject_IDs, iter_no=k, kind=params['connectivity'], atlas_name=params['atlas'])
-            print(features_2 == features)
-            sys.exit()
             domain_ft = MIDA.site_information_mat(phenotype_raw, num_subjects, num_domains)
             best_model = grid_search(params, train_ind, test_ind, features, y, domain_ft=domain_ft)
             print('best parameters from 5CV grid search: \n', best_model)
@@ -177,7 +293,7 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
         if algorithm == 'LR':
             clf = LogisticRegression(random_state=seed, solver='lbfgs', **best_model)
         elif algorithm == 'SVM':
-            clf = LinearSVC(random_state=seed, **best_model)
+            clf = svm.SVC(kernel='linear', random_state=seed, **best_model)
         else:
             clf = RidgeClassifier(random_state=seed, **best_model)
 
@@ -244,7 +360,7 @@ def train(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, 
                 features = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind=connectivity, atlas_name=atlas) 
 
         
-        if model == 'MIDA':
+        if model == 'MIDA':        
             domain_ft = MIDA.site_information_mat(phenotype_raw, num_subjects, num_domains)
             best_model = grid_search(params, train_ind, test_ind, features, y, phenotype_ft=phenotype_ft, domain_ft=domain_ft)
             print('best parameters from 5CV grid search: \n', best_model)
@@ -267,7 +383,7 @@ def train(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, 
         if algorithm == 'LR':
             clf = LogisticRegression(random_state=seed, solver='lbfgs', **best_model)
         elif algorithm == 'SVM':
-            clf = LinearSVC(random_state=seed, **best_model)
+            clf = svm.SVC(kernel='linear', random_state=seed, **best_model)
         else:
             clf = RidgeClassifier(random_state=seed, **best_model)
 
@@ -338,6 +454,7 @@ def main():
     parser.add_argument('--filename', default='tangent', type=str, help='filename for output file. default: tangent.')
     parser.add_argument('--grid_search', default=False, type=str2bool, help='5 fold CV grid search on training fold'
                                                                             'to tune parameters')
+    parser.add_argument('--ensemble', default=False, type=str2bool, help='Leave one site out, use ensemble MIDA/raw. default: False')
     
     args = parser.parse_args()  
     print('Arguments: \n', args)
@@ -349,6 +466,7 @@ def main():
     params['phenotypes'] = args.phenotypes          # Add phenotype features 
     params['seed'] = args.seed                      # seed for random initialisation
     params['grid_search'] = args.grid_search        # grid search True or False
+    params['ensemble'] = args.ensemble
     
     # Algorithm choice
     params['algorithm'] = args.algorithm    
@@ -361,7 +479,7 @@ def main():
     atlas = args.atlas                              # Atlas for network construction (node definition)
     connectivity = args.connectivity                # Type of connectivity used for network construction
 
-    
+
     # 10 Fold CV or leave one site out CV
     params['leave_one_out'] = args.leave_one_out
     if params['leave_one_out'] == True:
@@ -407,9 +525,14 @@ def main():
     phenotype_ft = Reader.phenotype_ft_vector(pheno_ft, num_subjects)
 
     if params['leave_one_out'] == True:
+        
         # leave one site out evaluation
         params['phenotypes'] = False
-        leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, pheno_ft)
+
+        if params['ensemble'] == True:
+            leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, pheno_ft)
+        else:
+            leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, pheno_ft)
     else:
         # 10 fold CV evaluation
         train(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, pheno_ft)
