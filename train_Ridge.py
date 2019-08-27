@@ -27,7 +27,7 @@ from sklearn.model_selection import GridSearchCV
 import warnings
 warnings.filterwarnings("ignore")
 
-root_folder = '/path/to/data'
+root_folder = '/path/to/data/'
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 
 # Transform test data using the transformer learned on the training data

@@ -35,7 +35,7 @@ warnings.filterwarnings("ignore")
 
 # Input data variables
 
-# root_folder = r'path/to/data/'
+root_folder = '/path/to/data/'
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 phenotype = os.path.join(root_folder, 'ABIDE_pcp/Phenotypic_V1_0b_preprocessed1.csv')
 
@@ -246,7 +246,7 @@ def get_networks(subject_list, kind, iter_no='', seed=1234, validation_ext='10CV
         matrix = sio.loadmat(fl)[variable]
         all_networks.append(matrix)
     
-    if kind not in ['timetangent', 'tangent']:
+    if kind in ['timetangent', 'tangent']:
         norm_networks = [mat for mat in all_networks]
     else:
         norm_networks = [np.arctanh(mat) for mat in all_networks]
