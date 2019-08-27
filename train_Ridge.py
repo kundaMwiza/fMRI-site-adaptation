@@ -154,7 +154,7 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_d
             time.sleep(10)
             params['connectivity'] = 'tangent'
             process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext)
-            features_t = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind=connectivity, atlas_name=atlas)
+            features_t = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind='tangent', atlas_name=atlas)
         
         # load tangent timeseries features
         try:
@@ -164,7 +164,7 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_d
             time.sleep(10)
             params['connectivity'] = 'timetangent'
             process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext)
-            features_tt = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind=connectivity, atlas_name=atlas)
+            features_tt = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind='timetangent', atlas_name=atlas)
         
         # all loaded features
         features = [features_c, features_t, features_tt]
