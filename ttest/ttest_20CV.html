@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>ttest_10CV</title>
+<title>ttest_20CV</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13115,18 +13115,16 @@ div#notebook {
 
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="prompt input_prompt">In&nbsp;[27]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">ttest_ind</span>
 
-<span class="n">cv10_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;ttest_10CV.csv&#39;</span><span class="p">)</span>
-<span class="n">cv10_ACC_df</span> <span class="o">=</span> <span class="n">cv10_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
-<span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;Seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cv10_df</span><span class="p">[</span><span class="s1">&#39;Seed&#39;</span><span class="p">]</span>
-<span class="n">cv10_AUC_df</span> <span class="o">=</span> <span class="n">cv10_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
-<span class="n">cv10_AUC_df</span><span class="p">[</span><span class="s1">&#39;Seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cv10_df</span><span class="p">[</span><span class="s1">&#39;Seed&#39;</span><span class="p">]</span>
+<span class="n">cv20_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;ttest_20CV.csv&#39;</span><span class="p">)</span>
+<span class="n">cv20_ACC_df</span> <span class="o">=</span> <span class="n">cv20_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">cv20_AUC_df</span> <span class="o">=</span> <span class="n">cv20_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
 </pre></div>
 
     </div>
@@ -13137,7 +13135,7 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="1-tailed-two-sample-welch-t-test-seed=123-code">1-tailed two sample welch t-test seed=123 code<a class="anchor-link" href="#1-tailed-two-sample-welch-t-test-seed=123-code">&#182;</a></h1><p>Algorithm 1 and 2 10 fold CV results random variables $Y, X$. Let $Y_i, X_i$ be the 10 fold CV results with $i = 1,\ldots,10$.</p>
+<h1 id="1-tailed-two-sample-welch-t-test-code">1-tailed two sample welch t-test code<a class="anchor-link" href="#1-tailed-two-sample-welch-t-test-code">&#182;</a></h1><p>Algorithm 1 and 2 leave one site out CV results random variables $Y, X$. Let $Y_i, X_i$ be the 20 fold CV results with $i = 1,\ldots,20$.</p>
 <p>Let the population means of the two algorithms be $\mu_1$ and $\mu_2$ respectively. Then the test for statistical significance between distribution means is:</p>
 <p>$\mathbf{H_0}: \mu_1 = \mu_2$
 $\mathbf{H_a}: \mu_1 \neq \mu_2$</p>
@@ -13154,16 +13152,16 @@ $</p>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="prompt input_prompt">In&nbsp;[28]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">norm_ttest</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;MIDA&#39;</span><span class="p">,</span> <span class="s1">&#39;Raw&#39;</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (1035)&#39;</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (871)&#39;</span><span class="p">])</span>
 
 <span class="c1"># TP MIDA Ridge 1035 subjects</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP MIDA Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP raw Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP MIDA Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP raw Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
+<span class="n">d</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
 
 <span class="n">norm_ttest</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;TP MIDA Ridge (1035)&#39;</span><span class="p">,</span> <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
                     <span class="n">ttest_ind</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">equal_var</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>
@@ -13171,10 +13169,10 @@ $</p>
                     <span class="n">ttest_ind</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">equal_var</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span>
 
 <span class="c1"># TP raw Ridge 1035 subjects</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP raw Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP raw Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP raw Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP raw Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
+<span class="n">d</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
 
 <span class="n">norm_ttest</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;TP raw Ridge (1035)&#39;</span><span class="p">,</span> <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
                     <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
@@ -13182,10 +13180,10 @@ $</p>
                     <span class="n">ttest_ind</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">equal_var</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span>
 
 <span class="c1"># TP MIDA LR 871 subjects</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP MIDA LR (ACC) (871)&#39;</span><span class="p">]</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP raw LR (ACC) (871)&#39;</span><span class="p">]</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP MIDA LR (ACC) (871)&#39;</span><span class="p">]</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP raw LR (ACC) (871)&#39;</span><span class="p">]</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
+<span class="n">d</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
 
 <span class="n">norm_ttest</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;TP MIDA LR (871)&#39;</span><span class="p">,</span> <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
                     <span class="n">ttest_ind</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">equal_var</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>
@@ -13193,10 +13191,10 @@ $</p>
                     <span class="n">ttest_ind</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">equal_var</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span>
 
 <span class="c1"># TP raw LR 871 subjects</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP raw LR (ACC) (871)&#39;</span><span class="p">]</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP raw LR (ACC) (871)&#39;</span><span class="p">]</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP raw LR (ACC) (871)&#39;</span><span class="p">]</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP raw LR (ACC) (871)&#39;</span><span class="p">]</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
+<span class="n">d</span> <span class="o">=</span> <span class="n">cv20_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
 
 <span class="n">norm_ttest</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;TP raw Ridge (871)&#39;</span><span class="p">,</span> <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
                     <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
@@ -13212,213 +13210,13 @@ $</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="1-tailed-two-sample-&quot;corrected-resampled-t-test&quot;-seed=123-code">1-tailed two sample "corrected resampled t-test" seed=123 code<a class="anchor-link" href="#1-tailed-two-sample-&quot;corrected-resampled-t-test&quot;-seed=123-code">&#182;</a></h1><p>Problem with the welch t-test to compare two algorithms (see [1]):</p>
-<ul>
-<li>individual 10 fold results are not independent since the training folds overlap</li>
-<li>the differences in model performance ($Y_i - Y_i$) are not normally distributed because the individual 10 fold results are not independent</li>
-</ul>
-<p>Nadeau and Bengio (2003) (see [2]) propose the 'corrected resampled t test', which adjusts the variance based on overlap between the training/test sets. It has proper type 1 error, and greater statistical power (i.e. lower type 2 error) than the 5x2cv t test and McNemar's test</p>
-<p>Test statistic:</p>
-$$
-T=\frac{\frac{1}{n} \sum_{j=1}^{n} Y_j - X_j}{\sqrt{\left(\frac{1}{n}+\frac{n_{2}}{n_{1}}\right) \hat{\sigma}^{2}}}
-$$<p>where $n_1$ and $n_2$ are the training and test fold sample sizes respectively. $n$ is the number of folds and $\hat{\sigma}^2$ is the sample variance of the differences $Y_j - X_j$.</p>
-<p>The test statistic is compared to a student-t distribution with $n-1$ degrees of freedom.</p>
-<p>References:</p>
-<p>[1] <a href="http://rasbt.github.io/mlxtend/user_guide/evaluate/paired_ttest_kfold_cv/">http://rasbt.github.io/mlxtend/user_guide/evaluate/paired_ttest_kfold_cv/</a></p>
-<p>[2] Nadeau, C. and Bengio, Y., 2000. Inference for the generalization error. In Advances in neural information processing systems (pp. 307-313).</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">t</span>
-
-<span class="c1"># corrected resampled t-test function</span>
-<span class="k">def</span> <span class="nf">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-    <span class="n">diff</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span> 
-    <span class="n">diff_mean</span> <span class="o">=</span> <span class="n">diff</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-    <span class="n">diff_var</span> <span class="o">=</span> <span class="n">diff</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">denom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">k</span><span class="o">*</span><span class="n">r</span><span class="p">)</span> <span class="o">+</span> <span class="n">n2</span><span class="o">/</span><span class="n">n1</span><span class="p">)</span> <span class="o">*</span> <span class="n">diff_var</span><span class="p">)</span>
-    <span class="n">t_stat</span> <span class="o">=</span> <span class="n">diff_mean</span><span class="o">/</span><span class="n">denom</span>
-    <span class="n">df</span> <span class="o">=</span> <span class="n">n</span><span class="o">*</span><span class="n">k</span><span class="o">*</span><span class="n">r</span> <span class="o">-</span> <span class="mi">1</span>
-    <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">t</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">t_stat</span><span class="p">),</span> <span class="n">df</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">p</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># number of folds</span>
-<span class="n">n</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="c1"># number of training samples</span>
-<span class="n">n1</span> <span class="o">=</span> <span class="mi">932</span>
-<span class="c1"># number of test samples</span>
-<span class="n">n2</span> <span class="o">=</span> <span class="mi">103</span>
-
-<span class="c1"># TP MIDA Ridge 1035 subjects</span>
-<span class="n">corr_ttest</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;MIDA&#39;</span><span class="p">,</span> <span class="s1">&#39;Raw&#39;</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (1035)&#39;</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (871)&#39;</span><span class="p">])</span>
-
-<span class="n">a</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP MIDA Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP raw Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
-
-<span class="n">corr_ttest</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;TP MIDA Ridge (1035)&#39;</span><span class="p">,</span> <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">),</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">),</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">)]</span>
-
-<span class="n">a</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP raw Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP raw Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
-
-<span class="c1"># TP raw Ridge 1035 subjects</span>
-<span class="n">corr_ttest</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;TP raw Ridge (1035)&#39;</span><span class="p">,</span> <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
-                    <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">),</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">)]</span>
-
-<span class="n">n</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="n">n1</span> <span class="o">=</span> <span class="mi">785</span>
-<span class="n">n2</span> <span class="o">=</span> <span class="mi">86</span>
-
-<span class="c1"># TP MIDA LR 871 subjects</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP MIDA LR (ACC) (871)&#39;</span><span class="p">]</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP raw LR (ACC) (871)&#39;</span><span class="p">]</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
-
-<span class="n">corr_ttest</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;TP MIDA LR (871)&#39;</span><span class="p">,</span> <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">),</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">),</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">)]</span>
-
-<span class="c1"># TP raw LR 871 subjects</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP raw LR (ACC) (871)&#39;</span><span class="p">]</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;TP raw LR (ACC) (871)&#39;</span><span class="p">]</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
-
-<span class="n">corr_ttest</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;TP raw Ridge (871)&#39;</span><span class="p">,</span> <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
-                    <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">),</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">)]</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="1-tailed-two-sample-&#8220;corrected-repeated-k-fold-cv-test&#8221;-code">1-tailed two sample &#8220;corrected repeated k-fold cv test&#8221; code<a class="anchor-link" href="#1-tailed-two-sample-&#8220;corrected-repeated-k-fold-cv-test&#8221;-code">&#182;</a></h1><p>Bouckaert and Frank (2004) ([1]) extend the corrected resampled $k$-fold cv test to cases where $k$-fold cv is repeated $r$ times.</p>
-<p>Test statistic:</p>
-$$
-T=\frac{\frac{1}{k \cdot r} \sum_{i=1}^{k} \sum_{j=1}^{r} Y_{ij} - X_{ij}}{\sqrt{\left(\frac{1}{k \cdot r}+\frac{n_{2}}{n_{1}}\right) \hat{\sigma}^{2}}}
-$$<p>Where $n_1$ and $n_2$ are the training and test fold sample sizes respectively. $k$ is the number of folds, $r$ is the number of repetitions and $\hat{\sigma}^2$ is the sample variance of the differences $Y_{ij} - X_{ij}$.</p>
-<p>The test statistic is compared to a student-t distribution with $k\times r-1$ degrees of freedom.</p>
-<p>References:</p>
-<p>[1] Bouckaert, R.R. and Frank, E., 2004, May. Evaluating the replicability of significance tests for comparing learning algorithms. In Pacific-Asia Conference on Knowledge Discovery and Data Mining (pp. 3-12). Springer, Berlin, Heidelberg.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[15]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">n1</span> <span class="o">=</span> <span class="mi">932</span>
-<span class="n">n2</span> <span class="o">=</span> <span class="mi">103</span>
-<span class="c1"># number of folds</span>
-<span class="n">k</span> <span class="o">=</span> <span class="mi">10</span> 
-<span class="c1"># number of repetitions (different seeds)</span>
-<span class="n">r</span> <span class="o">=</span> <span class="mi">3</span>
-
-<span class="c1"># TP MIDA Ridge 1035 subjects</span>
-<span class="n">r_corr_ttest</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;MIDA&#39;</span><span class="p">,</span> <span class="s1">&#39;Raw&#39;</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (1035)&#39;</span><span class="p">,</span> <span class="s1">&#39;Parisot et al (871)&#39;</span><span class="p">])</span>
-
-<span class="n">a</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP MIDA Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP raw Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
-
-<span class="n">r_corr_ttest</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;TP MIDA Ridge (1035)&#39;</span><span class="p">,</span> <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">),</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">),</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">)]</span>
-
-<span class="c1"># TP raw Ridge 1035 subjects</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP raw Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP raw Ridge (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
-
-<span class="n">r_corr_ttest</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;TP raw Ridge (1035)&#39;</span><span class="p">,</span> <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
-                    <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">),</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">)]</span>
-
-<span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">n1</span> <span class="o">=</span> <span class="mi">785</span>
-<span class="n">n2</span> <span class="o">=</span> <span class="mi">86</span>
-<span class="n">k</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="n">r</span> <span class="o">=</span> <span class="mi">3</span>
-
-<span class="c1"># TP MIDA LR 871 subjects            </span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP MIDA LR (ACC) (871)&#39;</span><span class="p">]</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP raw LR (ACC) (871)&#39;</span><span class="p">]</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
-
-<span class="n">r_corr_ttest</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;TP MIDA LR (871)&#39;</span><span class="p">,</span> <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">),</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">),</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">)]</span>
-
-<span class="c1"># TP raw LR 871 subjects</span>
-<span class="n">a</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP raw LR (ACC) (871)&#39;</span><span class="p">]</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;TP raw LR (ACC) (871)&#39;</span><span class="p">]</span>
-<span class="n">c</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018) (ACC) (1035)&#39;</span><span class="p">]</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">cv10_ACC_df</span><span class="p">[</span><span class="s1">&#39;Parisot et al (2018)   (ACC) (871)&#39;</span><span class="p">]</span>
-
-<span class="n">r_corr_ttest</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;TP raw Ridge (871)&#39;</span><span class="p">,</span> <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
-                    <span class="s1">&#39;NA&#39;</span><span class="p">,</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">),</span>
-                    <span class="n">corr_ttest_fn</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">)]</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Notes">Notes<a class="anchor-link" href="#Notes">&#182;</a></h2><p>For the p-value results that follow, the following should be noted:</p>
 <ul>
-<li><p>The p-values are generated from comparing two models accuracy in individual folds</p>
-</li>
-<li><p>Comparing performance between different sample sizes (1035, 871) is not valid since the data in individual folds is different. The p-values are given nonetheless.</p>
-</li>
+<li>The p-values are generated from comparing two models accuracy in individual folds</li>
+<li>Comparing performance between different sample sizes (1035, 871) is not valid since the data in individual folds is different. The p-values are given nonetheless.</li>
 <li>Comparison against <em>Raw</em> (see p value tables below) refers to the Raw version of the model in the model column</li>
 </ul>
+<p>Lastly, the "corrected resampled t-test" methods are not included for leave one site out evaluation since the training/test samples differ greatly from fold to fold.</p>
 
 </div>
 </div>
@@ -13426,19 +13224,19 @@ $$<p>Where $n_1$ and $n_2$ are the training and test fold sample sizes respectiv
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Seed=123-average-10-fold-results">Seed=123 average 10 fold results<a class="anchor-link" href="#Seed=123-average-10-fold-results">&#182;</a></h2>
+<h2 id="Average-leave-one-site-out-results">Average leave-one-site out results<a class="anchor-link" href="#Average-leave-one-site-out-results">&#182;</a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="prompt input_prompt">In&nbsp;[29]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">result_summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">))</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">result_summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">cv20_ACC_df</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">))</span>
 <span class="n">result_summary</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ACC&#39;</span><span class="p">]</span>
-<span class="n">result_summary</span><span class="p">[</span><span class="s1">&#39;AUC&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cv10_AUC_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cv10_AUC_df</span><span class="o">.</span><span class="n">Seed</span> <span class="o">==</span> <span class="mi">123</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">))</span>
-<span class="n">result_summary</span> <span class="o">=</span> <span class="n">result_summary</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">result_summary</span><span class="p">[</span><span class="s1">&#39;AUC&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cv20_ACC_df</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">))</span>
+<span class="n">result_summary</span> <span class="o">=</span> <span class="n">result_summary</span>
 <span class="n">result_summary</span>
 </pre></div>
 
@@ -13452,7 +13250,7 @@ $$<p>Where $n_1$ and $n_2$ are the training and test fold sample sizes respectiv
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[16]:</div>
+    <div class="prompt output_prompt">Out[29]:</div>
 
 
 
@@ -13482,33 +13280,33 @@ $$<p>Where $n_1$ and $n_2$ are the training and test fold sample sizes respectiv
   <tbody>
     <tr>
       <th>TP MIDA Ridge (ACC) (1035)</th>
-      <td>0.727577</td>
-      <td>0.779279</td>
+      <td>0.709354</td>
+      <td>0.709354</td>
     </tr>
     <tr>
       <th>TP raw Ridge (ACC) (1035)</th>
-      <td>0.715935</td>
-      <td>0.782212</td>
+      <td>0.685462</td>
+      <td>0.685462</td>
     </tr>
     <tr>
       <th>TP MIDA LR (ACC) (871)</th>
-      <td>0.692327</td>
-      <td>0.752452</td>
+      <td>0.687849</td>
+      <td>0.687849</td>
     </tr>
     <tr>
       <th>TP raw LR (ACC) (871)</th>
-      <td>0.691124</td>
-      <td>0.750557</td>
+      <td>0.681414</td>
+      <td>0.681414</td>
     </tr>
     <tr>
       <th>Parisot et al (2018) (ACC) (1035)</th>
-      <td>0.683066</td>
-      <td>0.742288</td>
+      <td>0.682928</td>
+      <td>0.682928</td>
     </tr>
     <tr>
       <th>Parisot et al (2018)   (ACC) (871)</th>
-      <td>0.703837</td>
-      <td>0.749609</td>
+      <td>0.683711</td>
+      <td>0.683711</td>
     </tr>
   </tbody>
 </table>
@@ -13530,7 +13328,7 @@ $$<p>Where $n_1$ and $n_2$ are the training and test fold sample sizes respectiv
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="prompt input_prompt">In&nbsp;[30]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">norm_ttest</span>
@@ -13546,7 +13344,7 @@ $$<p>Where $n_1$ and $n_2$ are the training and test fold sample sizes respectiv
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[17]:</div>
+    <div class="prompt output_prompt">Out[30]:</div>
 
 
 
@@ -13581,33 +13379,33 @@ $$<p>Where $n_1$ and $n_2$ are the training and test fold sample sizes respectiv
       <th>0</th>
       <td>TP MIDA Ridge (1035)</td>
       <td>NA</td>
-      <td>0.241313</td>
-      <td>0.007615</td>
-      <td>0.110414</td>
+      <td>0.201155</td>
+      <td>0.115821</td>
+      <td>0.132552</td>
     </tr>
     <tr>
       <th>1</th>
       <td>TP raw Ridge (1035)</td>
       <td>NA</td>
       <td>NA</td>
-      <td>0.009999</td>
-      <td>0.226729</td>
+      <td>0.460802</td>
+      <td>0.473706</td>
     </tr>
     <tr>
       <th>2</th>
       <td>TP MIDA LR (871)</td>
       <td>NA</td>
-      <td>0.485272</td>
-      <td>0.340228</td>
-      <td>0.317500</td>
+      <td>0.405025</td>
+      <td>0.409571</td>
+      <td>0.426988</td>
     </tr>
     <tr>
       <th>3</th>
       <td>TP raw Ridge (871)</td>
       <td>NA</td>
       <td>NA</td>
-      <td>0.384607</td>
-      <td>0.330255</td>
+      <td>0.475119</td>
+      <td>0.463564</td>
     </tr>
   </tbody>
 </table>
@@ -13616,315 +13414,6 @@ $$<p>Where $n_1$ and $n_2$ are the training and test fold sample sizes respectiv
 
 </div>
 
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="1-tailed-two-sample-&quot;corrected-resampled-t-test&quot;-p-values">1-tailed two sample "corrected resampled t-test" p-values<a class="anchor-link" href="#1-tailed-two-sample-&quot;corrected-resampled-t-test&quot;-p-values">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[18]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">corr_ttest</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[18]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>model</th>
-      <th>MIDA</th>
-      <th>Raw</th>
-      <th>Parisot et al (1035)</th>
-      <th>Parisot et al (871)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>TP MIDA Ridge (1035)</td>
-      <td>NA</td>
-      <td>0.217912</td>
-      <td>0.064961</td>
-      <td>0.157642</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>TP raw Ridge (1035)</td>
-      <td>NA</td>
-      <td>NA</td>
-      <td>0.052201</td>
-      <td>0.305775</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>TP MIDA LR (871)</td>
-      <td>NA</td>
-      <td>0.47047</td>
-      <td>0.387211</td>
-      <td>0.289592</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>TP raw Ridge (871)</td>
-      <td>NA</td>
-      <td>NA</td>
-      <td>0.419651</td>
-      <td>0.339068</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Average-10-fold-results-over-3-seeds-(12,-123,-1234)">Average 10 fold results over 3 seeds (12, 123, 1234)<a class="anchor-link" href="#Average-10-fold-results-over-3-seeds-(12,-123,-1234)">&#182;</a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[19]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">result_summary</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">cv10_ACC_df</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">))</span>
-<span class="n">result_summary</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ACC&#39;</span><span class="p">]</span>
-<span class="n">result_summary</span><span class="p">[</span><span class="s1">&#39;AUC&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cv10_AUC_df</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">))</span>
-<span class="n">result_summary</span> <span class="o">=</span> <span class="n">result_summary</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">result_summary</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[19]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>ACC</th>
-      <th>AUC</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>TP MIDA Ridge (ACC) (1035)</th>
-      <td>0.726556</td>
-      <td>0.779243</td>
-    </tr>
-    <tr>
-      <th>TP raw Ridge (ACC) (1035)</th>
-      <td>0.711747</td>
-      <td>0.778513</td>
-    </tr>
-    <tr>
-      <th>TP MIDA LR (ACC) (871)</th>
-      <td>0.697315</td>
-      <td>0.758130</td>
-    </tr>
-    <tr>
-      <th>TP raw LR (ACC) (871)</th>
-      <td>0.702608</td>
-      <td>0.764429</td>
-    </tr>
-    <tr>
-      <th>Parisot et al (2018) (ACC) (1035)</th>
-      <td>0.684320</td>
-      <td>0.746053</td>
-    </tr>
-    <tr>
-      <th>Parisot et al (2018)   (ACC) (871)</th>
-      <td>0.685088</td>
-      <td>0.735512</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="1-tailed-two-sample-&#8220;corrected-repeated-k-fold-cv-test&#8221;-p-values">1-tailed two sample &#8220;corrected repeated k-fold cv test&#8221; p-values<a class="anchor-link" href="#1-tailed-two-sample-&#8220;corrected-repeated-k-fold-cv-test&#8221;-p-values">&#182;</a></h3>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[20]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">r_corr_ttest</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[20]:</div>
-
-
-
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>model</th>
-      <th>MIDA</th>
-      <th>Raw</th>
-      <th>Parisot et al (1035)</th>
-      <th>Parisot et al (871)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>TP MIDA Ridge (1035)</td>
-      <td>NA</td>
-      <td>0.189157</td>
-      <td>0.029159</td>
-      <td>0.023766</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>TP raw Ridge (1035)</td>
-      <td>NA</td>
-      <td>NA</td>
-      <td>0.037090</td>
-      <td>0.095330</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>TP MIDA LR (871)</td>
-      <td>NA</td>
-      <td>0.351018</td>
-      <td>0.302337</td>
-      <td>0.243781</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>TP raw Ridge (871)</td>
-      <td>NA</td>
-      <td>NA</td>
-      <td>0.248386</td>
-      <td>0.210891</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
 </div>
 </div>
 
