@@ -22,6 +22,6 @@ Options are available for the preprocessing pipeline, brain atlas and functional
 ## Classification
 The default model provided is the MIDA model with tangent pearson functional connectivity trained with a ridge classifier and evaluated with 10 fold CV. Can be run by:
 ```
-python train.py
+python run_model.py
 ```
-The default functional connectivity here is tangent pearson and is computed at run time separately for train and test folds. As above, run `python train.py --help` to see the available options.
+The default functional connectivity here is tangent pearson and is computed at run time separately for train and test folds. As above, run `python run_model.py --help` to see the available options.
