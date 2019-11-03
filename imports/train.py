@@ -13,9 +13,9 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.linear_model import RidgeClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
-import KHSIC as KHSIC
-import MIDA as MIDA
-import preprocess_data as Reader
+from imports import KHSIC as KHSIC
+from imports import MIDA as MIDA
+from imports import preprocess_data as Reader
 
 root_folder = '/path/to/data/'
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')

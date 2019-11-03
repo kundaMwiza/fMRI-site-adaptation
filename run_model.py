@@ -1,8 +1,9 @@
+import sys
 import argparse
 import pandas as pd
 import numpy as np
-import preprocess_data as Reader
-import train as train
+from imports import preprocess_data as Reader
+from imports import train as train
 import warnings
 warnings.filterwarnings("ignore")
 
