@@ -2,14 +2,6 @@
 
 This code provides a python implementation of the second-order functional connectivity feature and domain adaptation approach described in our paper (url) for Autism classification on the ABIDE dataset.
 
-## Requirements
-numpy  
-pandas  
-scipy  
-scikit-learn  
-nilearn  
-networkx
-
 ## Download required packages
 ```
 pip install -r requirements.txt
