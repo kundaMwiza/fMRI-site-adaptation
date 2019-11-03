@@ -27,7 +27,9 @@ from sklearn.model_selection import GridSearchCV
 import warnings
 warnings.filterwarnings("ignore")
 
-root_folder = '/path/to/data/'
+# root_folder = '/path/to/data/'
+root_folder = r'/Users/mwiza/Google Drive 2/Autism Classification/Data/'
+
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 
 # Transform test data using the transformer learned on the training data
@@ -132,6 +134,8 @@ def grid_search(params, train_ind, test_ind, features, y, phenotype_ft=None, dom
 def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, phenotype_raw):
     results_acc = []
     results_auc = []
+    all_pred_acc = np.zeros(y.shape)
+    all_pred_auc = np.zeros(y.shape)
 
     algorithm = params['algorithm']
     seed = params['seed']
@@ -141,6 +145,7 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_d
     filename = params['filename']
     connectivities = {0: 'correlation', 1: 'TPE', 2: 'TE'}
     features_c = Reader.get_networks(subject_IDs, iter_no='', kind='correlation', atlas_name=atlas)
+
 
     for i in range(num_domains):
         k = i
@@ -212,12 +217,14 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_d
         
         # mode prediciton
         mode_predictions = sc.mode(np.hstack([preds_binary[j][np.newaxis].T for j in range(3)]), axis = 1)[0].ravel()
-
+        all_pred_acc[test_ind, :] = mode_predictions[:, np.newaxis]
+        
         # Compute the accuracy
         lin_acc = accuracy_score(y[test_ind].ravel(), mode_predictions)
 
         # mean decision score
         mean_predictions = np.hstack([preds_decision[j][:, np.newaxis] for j in range(3)]).mean(axis=1)
+        all_pred_auc[test_ind, :] = mean_predictions[:, np.newaxis]
 
         # Compute the AUC
         lin_auc = sklearn.metrics.roc_auc_score(y[test_ind], mean_predictions)
@@ -235,10 +242,15 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_d
     std_acc = np.array(results_acc).std()
     avg_auc = np.array(results_auc).mean()
     std_auc = np.array(results_auc).std()
+    weighted_acc = (y == all_pred_acc).sum()/params['n_subjects']
+    weighted_auc = sklearn.metrics.roc_auc_score(y, all_pred_auc)
+
     print("accuracy average", avg_acc)
     print("standard deviation accuracy", std_acc)
     print("auc average", avg_auc)
     print("standard deviation auc", std_auc)
+    print("(weighted) accuracy",  weighted_acc)
+    print("(weighted) auc",  weighted_auc)
 
     all_results = pd.DataFrame()
     all_results['ACC'] = results_acc
@@ -251,6 +263,8 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
 
     results_acc = []
     results_auc = []
+    all_pred_acc = np.zeros(y.shape)
+    all_pred_auc = np.zeros(y.shape)
 
     algorithm = params['algorithm']
     seed = params['seed']
@@ -260,8 +274,7 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
     validation_ext = params['validation_ext']
     filename = params['filename']
 
-    all_pred_acc = np.zeros(y.shape)
-    all_pred_auc = np.zeros(y.shape)
+
 
     for i in range(num_domains):
         k = i
@@ -308,11 +321,15 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
 
         # Compute the accuracy
         lin_acc = clf.score(x_data[test_ind, :], y[test_ind].ravel())
+        y_pred = clf.predict(x_data[test_ind, :])
+        all_pred_acc[test_ind, :] = y_pred[:, np.newaxis]
 
         # Compute the AUC
         pred = clf.decision_function(x_data[test_ind, :])
         all_pred_auc[test_ind, :] = pred[:, np.newaxis]
         lin_auc = sklearn.metrics.roc_auc_score(y[test_ind], pred)
+
+
         
         # append accuracy and AUC to respective lists
         results_acc.append(lin_acc)
@@ -536,6 +553,7 @@ def main():
         pheno_ft = Reader.create_affinity_graph_from_scores(['SEX', 'SITE_ID','EYE_STATUS_AT_SCAN', 'HANDEDNESS_CATEGORY', 'AGE_AT_SCAN','FIQ', 'VIQ', 'PIQ'], subject_IDs)
 
     pheno_ft.index = subject_IDs
+    pheno_ft2 = pheno_ft
 
     # number of sites available in the dataset
     params['num_domains'] = len(pheno_ft2['SITE_ID'].unique())
