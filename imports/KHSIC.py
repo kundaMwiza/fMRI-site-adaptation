@@ -62,6 +62,7 @@ def hsic_gam(X, Y, alph = 0.5):
 	width_x = np.sqrt( 0.5 * np.median(dists[dists>0]) )
 	# ----- -----
 
+	# if using a rbf kernel for Y
 	# ----- width of Y -----
 	Ymed = Y
 
@@ -79,10 +80,10 @@ def hsic_gam(X, Y, alph = 0.5):
 	bone = np.ones((n, 1), dtype = float)
 	H = np.identity(n) - np.ones((n,n), dtype = float) / n
 
+	# rbf kernel for X 
 	K = rbf_dot(X, X, width_x)
+	# linear kernel for Y 
 	L = linear_kernel(Y)
-	# print(K.shape, L.shape)
-
 
 	Kc = np.dot(np.dot(H, K), H)
 	Lc = np.dot(np.dot(H, L), H)
@@ -107,5 +108,6 @@ def hsic_gam(X, Y, alph = 0.5):
 	bet = varHSIC*n / mHSIC
 
 	thresh = gamma.ppf(1-alph, al, scale=bet)[0][0]
+	p_val = gamma.cdf(testStat, al, scale=bet)[0][0]
 
-	return (testStat, thresh)
+	return (testStat, thresh, p_val)

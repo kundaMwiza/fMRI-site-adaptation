@@ -60,7 +60,7 @@ def MIDA(X, D, Y=None, mu = 0.1, gamma_y=0.1, h=1035, labels=False):
     # Augmented features rbf kernel
     width_x = width_rbf(X)
     K_x = rbf_dot(X, X, width_x)
-
+    
     # site features linear kernel
     K_d = np.dot(D, D.T)
 
@@ -70,6 +70,7 @@ def MIDA(X, D, Y=None, mu = 0.1, gamma_y=0.1, h=1035, labels=False):
 
     if labels == False:
         # unsupervised MIDA
+        
         mat = multi_dot([K_x, multi_dot([-1.*H, K_d, H]) + mu*H, K_x])
         eigs, eigv = np.linalg.eig(mat)
         ind = eigs.argsort()[-h:][::-1]
@@ -79,6 +80,7 @@ def MIDA(X, D, Y=None, mu = 0.1, gamma_y=0.1, h=1035, labels=False):
 
         # label information linear kernel
         K_y = np.dot(Y, Y.T)
+
         mat = multi_dot([K_x, multi_dot([-1.*H,K_d,H]) + mu*H + gamma_y*multi_dot([H, K_y, H]), K_x])
         eigs, eigv = np.linalg.eig(mat)
         ind = eigs.argsort()[-h:][::-1]
