@@ -1,3 +1,4 @@
+# Copyright (c) 2019 Mwiza Kunda
 # Copyright (C) 2017 Sarah Parisot <s.parisot@imperial.ac.uk>, , Sofia Ira Ktena <ira.ktena@imperial.ac.uk>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -15,15 +16,13 @@
 
 from nilearn import datasets
 import argparse
-import preprocess_data as Reader
+from fetch_ABIDE import preprocess_data as Reader
 import os
 import shutil
 import sys
 
 # Input data variables
-# root_folder = r'/content/drive/My Drive/population-gcn/Data/'
-root_folder = '/Users/mrwiz/Downloads/population-gcn-master/gcn/Data/'
-# root_folder = r'path/to/data'
+root_folder = '/path/to/data/'
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 
 def str2bool(v):

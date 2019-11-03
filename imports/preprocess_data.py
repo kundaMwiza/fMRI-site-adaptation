@@ -1,3 +1,4 @@
+# Copyright (c) 2019 Mwiza Kunda
 # Copyright (C) 2017 Sarah Parisot <s.parisot@imperial.ac.uk>, Sofia Ira Ktena <ira.ktena@imperial.ac.uk>
 #
 # This program is free software: you can redistribute it and/or modify
