@@ -1,4 +1,4 @@
-# Improving autism identification with multisite data via site-dependence minimisation and second-order functional connectivity
+# Domain adaptation for agglomerative datasets: classification of the ABIDE dataset
 
 ## Requirements
 numpy  
