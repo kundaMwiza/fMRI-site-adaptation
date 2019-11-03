@@ -16,7 +16,7 @@
 
 from nilearn import datasets
 import argparse
-from fetch_ABIDE import preprocess_data as Reader
+from imports import preprocess_data as Reader
 import os
 import shutil
 import sys
