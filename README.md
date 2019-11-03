@@ -1,6 +1,6 @@
 # Domain adaptation for agglomerative datasets: classification of the ABIDE dataset
 
-This code provides a python implementation of the second-order functional connectivity feature and domain adaptation approach described in (url) for Autism classification on the ABIDE dataset.
+This code provides a python implementation of the second-order functional connectivity feature and domain adaptation approach described in our paper (url) for Autism classification on the ABIDE dataset.
 
 ## Requirements
 numpy  
