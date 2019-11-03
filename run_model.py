@@ -45,7 +45,7 @@ def main():
     parser.add_argument('--phenotypes', default=True, type=str2bool, help='Add phenotype features. default: True.')
     parser.add_argument('--KHSIC', default=True, type=str2bool, help='Compute kernel statistical test of independence between features'
                                                         ' and site, default True.')
-    parser.add_argument('--seed', default=1234, type=int, help='Seed for random initialisation. default: 1234.')
+    parser.add_argument('--seed', default=123, type=int, help='Seed for random initialisation. default: 1234.')
     parser.add_argument('--connectivity', default='TPE', type=str, help='Type of connectivity used for network '
                                                                     'construction. options: correlation, TE(tangent embedding), TPE(tangent pearson embedding),'
                                                                     'default: TPE.')
