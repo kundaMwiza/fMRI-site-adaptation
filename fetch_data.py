@@ -15,15 +15,13 @@
 
 from nilearn import datasets
 import argparse
-import preprocess_data as Reader
+from imports import preprocess_data as Reader
 import os
 import shutil
 import sys
 
 # Input data variables
-# root_folder = r'/content/drive/My Drive/population-gcn/Data/'
-root_folder = '/Users/mrwiz/Downloads/population-gcn-master/gcn/Data/'
-# root_folder = r'path/to/data'
+root_folder = '/path/to/data/'
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 
 def str2bool(v):
