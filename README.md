@@ -15,8 +15,8 @@ python fetch_data.py
 Options are available for the preprocessing pipeline, brain atlas and functional connectivity. Run `python fetch_data.py --help` for information about the available options. For tangent Pearson connectivity, see below.
 
 ## Classification
-The default model provided is the MIDA model with tangent Pearson functional connectivity + phenotypes trained with a ridge classifier and evaluated with 10 fold cross validation. Can be run by:
+The default model provided is the MIDA model with tangent Pearson functional connectivity + phenotypes trained with a ridge classifier and evaluated with 10 fold cross validation (CV). Can be run by:
 ```
 python run_model.py
 ```
-The default functional connectivity here is tangent Pearson embedding and is computed at run time separately for train and test folds. As above, run `python run_model.py --help` to see the available options.
+The default functional connectivity here is tangent Pearson embedding and is computed at run time separately for train and test folds. As above, run `python run_model.py --help` to see the available options for the choice of brain atlas, functional connectivity, evaluation method (e.g. 10CV, leave one site out) e.t.c.
