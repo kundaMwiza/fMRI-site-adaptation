@@ -1,3 +1,15 @@
+# Copyright (c) 2019 Mwiza Kunda
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
 import numpy as np
 from numpy.linalg import multi_dot
 from sklearn.metrics.pairwise import pairwise_kernels
@@ -60,7 +72,7 @@ def MIDA(X, D, Y=None, mu = 0.1, gamma_y=0.1, h=1035, labels=False):
     # Augmented features rbf kernel
     width_x = width_rbf(X)
     K_x = rbf_dot(X, X, width_x)
-
+    
     # site features linear kernel
     K_d = np.dot(D, D.T)
 
@@ -70,6 +82,7 @@ def MIDA(X, D, Y=None, mu = 0.1, gamma_y=0.1, h=1035, labels=False):
 
     if labels == False:
         # unsupervised MIDA
+        
         mat = multi_dot([K_x, multi_dot([-1.*H, K_d, H]) + mu*H, K_x])
         eigs, eigv = np.linalg.eig(mat)
         ind = eigs.argsort()[-h:][::-1]
@@ -79,6 +92,7 @@ def MIDA(X, D, Y=None, mu = 0.1, gamma_y=0.1, h=1035, labels=False):
 
         # label information linear kernel
         K_y = np.dot(Y, Y.T)
+
         mat = multi_dot([K_x, multi_dot([-1.*H,K_d,H]) + mu*H + gamma_y*multi_dot([H, K_y, H]), K_x])
         eigs, eigv = np.linalg.eig(mat)
         ind = eigs.argsort()[-h:][::-1]
