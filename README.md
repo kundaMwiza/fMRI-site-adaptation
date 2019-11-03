@@ -1,4 +1,4 @@
-# fMRI-disease-classification
+# Improving autism identification with multisite data via site-dependence minimisation and second-order functional connectivity
 
 ## Requirements
 numpy  
