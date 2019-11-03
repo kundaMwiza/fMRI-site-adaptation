@@ -107,12 +107,12 @@ def subject_connectivity(timeseries, subjects, atlas_name, kind, iter_no='', see
         connectivity : connectivity matrix (regions x regions)
     """
         
-    if kind in ['tangent', 'timetangent', 'partial correlation', 'correlation', 'covariance']:
-        if kind not in ['tangent', 'timetangent']:
+    if kind in ['TPE', 'TE', 'correlation']:
+        if kind not in ['TPE', 'TE']:
             conn_measure = connectome.ConnectivityMeasure(kind=kind)
             connectivity = conn_measure.fit_transform(timeseries)
         else:
-            if kind == 'tangent':
+            if kind == 'TPE':
                 conn_measure = connectome.ConnectivityMeasure(kind='correlation')
                 conn_mat = conn_measure.fit_transform(timeseries)
                 conn_measure = connectome.ConnectivityMeasure(kind='tangent')
@@ -124,7 +124,7 @@ def subject_connectivity(timeseries, subjects, atlas_name, kind, iter_no='', see
                 connectivity = connectivity_fit.transform(timeseries)
             
     if save:
-        if kind not in  ['tangent', 'timetangent']:
+        if kind not in  ['TPE', 'TE']:
             for i, subj_id in enumerate(subjects):
                 subject_file = os.path.join(save_path, subj_id,
                                             subj_id + '_' + atlas_name + '_' + kind.replace(' ', '_') + '.mat')
@@ -186,21 +186,31 @@ def get_subject_score(subject_list, score):
     return scores_dict
 
 # preprocess phenotypes. Categorical -> ordinal representation
-def preprocess_phenotypes(pheno_ft):
+def preprocess_phenotypes(pheno_ft, params):
 
-    ct = ColumnTransformer([("ordinal", OrdinalEncoder(), [0, 1, 2, 3])], remainder ='passthrough')
+    if params['model'] == 'MIDA':
+        ct = ColumnTransformer([("ordinal", OrdinalEncoder(), [0, 1, 2])], remainder ='passthrough')
+    else:
+        ct = ColumnTransformer([("ordinal", OrdinalEncoder(), [0, 1, 2, 3])], remainder ='passthrough')
+
     pheno_ft = ct.fit_transform(pheno_ft)
     pheno_ft = pheno_ft.astype('float32')
 
     return(pheno_ft)
 
 # create phenotype feature vector to concatenate with fmri feature vectors
-def phenotype_ft_vector(pheno_ft, num_subjects):
+def phenotype_ft_vector(pheno_ft, num_subjects, params):
     gender = pheno_ft[:,0]
-    eye = pheno_ft[:,2]
-    hand = pheno_ft[:,3]
-    age = pheno_ft[:,4]
-    fiq = pheno_ft[:,5]
+    if params['model'] == 'MIDA':
+        eye = pheno_ft[:, 0]
+        hand = pheno_ft[:,2]
+        age = pheno_ft[:,3]
+        fiq = pheno_ft[:,4]
+    else:
+        eye = pheno_ft[:, 2]
+        hand = pheno_ft[:,3]
+        age = pheno_ft[:,4]
+        fiq = pheno_ft[:,5]
 
     phenotype_ft = np.zeros((num_subjects,4))
     phenotype_ft_eye = np.zeros((num_subjects, 2))
@@ -212,8 +222,12 @@ def phenotype_ft_vector(pheno_ft, num_subjects):
         phenotype_ft[i, -1] = fiq[i]
         phenotype_ft_eye[i, int(eye[i])] = 1
         phenotype_ft_hand[i, int(hand[i])] = 1
-        
-    phenotype_ft = np.concatenate([phenotype_ft, phenotype_ft_hand, phenotype_ft_eye], axis=1)
+    
+    if params['model'] == 'MIDA':
+        phenotype_ft = np.concatenate([phenotype_ft, phenotype_ft_hand], axis=1)
+    else:
+        phenotype_ft = np.concatenate([phenotype_ft, phenotype_ft_hand, phenotype_ft_eye], axis=1)
+
 
     return phenotype_ft
 
@@ -236,7 +250,7 @@ def get_networks(subject_list, kind, iter_no='', seed=1234, validation_ext='10CV
     for subject in subject_list:
         if len(kind.split()) == 2:
             kind = '_'.join(kind.split())
-        if kind not in ['tangent', 'timetangent']:
+        if kind not in ['TPE', 'TE']:
             fl = os.path.join(data_folder, subject,
                             subject + "_" + atlas_name + "_" + kind.replace(' ', '_') +".mat")
         else:
@@ -246,7 +260,7 @@ def get_networks(subject_list, kind, iter_no='', seed=1234, validation_ext='10CV
         matrix = sio.loadmat(fl)[variable]
         all_networks.append(matrix)
     
-    if kind in ['timetangent', 'tangent']:
+    if kind in ['TE', 'TPE']:
         norm_networks = [mat for mat in all_networks]
     else:
         norm_networks = [np.arctanh(mat) for mat in all_networks]
