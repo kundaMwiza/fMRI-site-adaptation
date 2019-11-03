@@ -7,7 +7,7 @@ This code provides a python implementation of the second-order functional connec
 pip install -r requirements.txt
 ```
 ## Download and preprocess ABIDE data
-In the files ``train.py``, ``preprocess_data.py`` and ``fetch_data.py``, change 'path/to/data/' to an appropriate file path.
+In the files ``train.py``, ``imports/preprocess_data.py`` and ``fetch_data.py``, change 'path/to/data/' to an appropriate file path.
 To download the ABIDE data, run:
 ```
 python fetch_data.py
