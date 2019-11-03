@@ -93,7 +93,7 @@ def get_timeseries(subject_list, atlas_name, silence=False):
     return timeseries
 
 #  compute connectivity matrices
-def subject_connectivity(timeseries, subjects, atlas_name, kind, iter_no='', seed=1234, validation_ext='10CV', save=True, save_path=data_folder):
+def subject_connectivity(timeseries, subjects, atlas_name, kind, iter_no='', seed=1234, validation_ext='10CV', n_subjects='', save=True, save_path=data_folder):
     """
         timeseries   : timeseries table for subject (timepoints x regions)
         subjects     : subject IDs
@@ -133,10 +133,10 @@ def subject_connectivity(timeseries, subjects, atlas_name, kind, iter_no='', see
         else:
             for i, subj_id in enumerate(subjects):
                 subject_file = os.path.join(save_path, subj_id,
-                                subj_id + '_' + atlas_name + '_' + kind.replace(' ', '_') + '_' + str(iter_no) + '_' + str(seed) + '_' + validation_ext + '.mat')
+                                subj_id + '_' + atlas_name + '_' + kind.replace(' ', '_') + '_' + str(iter_no) + '_' + str(seed) + '_' + validation_ext + str(n_subjects) + '.mat')
                 sio.savemat(subject_file, {'connectivity': connectivity[i]})  
             return connectivity_fit
- 
+  
 
 # Get the list of subject IDs
 
@@ -234,7 +234,7 @@ def phenotype_ft_vector(pheno_ft, num_subjects, params):
 
 
 # Load precomputed fMRI connectivity networks
-def get_networks(subject_list, kind, iter_no='', seed=1234, validation_ext='10CV', atlas_name="aal", variable='connectivity', fcs=False):
+def get_networks(subject_list, kind, iter_no='', seed=1234, validation_ext='10CV', n_subjects='', atlas_name="aal", variable='connectivity'):
     """
         subject_list : list of subject IDs
         kind         : the kind of connectivity to be used, e.g. lasso, partial correlation, correlation
@@ -255,7 +255,7 @@ def get_networks(subject_list, kind, iter_no='', seed=1234, validation_ext='10CV
                             subject + "_" + atlas_name + "_" + kind.replace(' ', '_') +".mat")
         else:
             fl = os.path.join(data_folder, subject,
-                    subject + "_" + atlas_name + "_" + kind.replace(' ', '_') + '_' + str(iter_no) + '_' + str(seed) + '_' + validation_ext + ".mat")
+                    subject + "_" + atlas_name + "_" + kind.replace(' ', '_') + '_' + str(iter_no) + '_' + str(seed) + '_' + validation_ext + str(n_subjects)+ ".mat")
             
         matrix = sio.loadmat(fl)[variable]
         all_networks.append(matrix)
