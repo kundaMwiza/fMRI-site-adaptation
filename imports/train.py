@@ -159,23 +159,23 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_d
 
         # load tangent pearson features
         try:
-            features_t = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind='TPE', n_subjects=params['n_subjects'], atlas_name=atlas)
+            features_t = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind='TPE', n_subjects=params['n_subjects'], atlas_name=atlas)
         except:
             print("Tangent features not found. reloading timeseries data")
             time.sleep(10)
             params['connectivity'] = 'TPE'
             process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext)
-            features_t = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind='TPE', n_subjects=params['n_subjects'], atlas_name=atlas)
+            features_t = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind='TPE', n_subjects=params['n_subjects'], atlas_name=atlas)
         
         # load tangent timeseries features
         try:
-            features_tt = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind='TE', n_subjects=params['n_subjects'], atlas_name=atlas)
+            features_tt = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind='TE', n_subjects=params['n_subjects'], atlas_name=atlas)
         except:
             print("Tangent features not found. reloading timeseries data")
             time.sleep(10)
             params['connectivity'] = 'TE'
             process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext)
-            features_tt = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind='TE', n_subjects=params['n_subjects'], atlas_name=atlas)
+            features_tt = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind='TE', n_subjects=params['n_subjects'], atlas_name=atlas)
         
         # all loaded features
         features = [features_c, features_t, features_tt]
@@ -289,12 +289,12 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
             
         if connectivity in ['TPE', 'TE']:
             try:
-                features = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
+                features = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
             except:
                 print("Tangent features not found. reloading timeseries data")
                 time.sleep(10)
                 process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext)
-                features = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
+                features = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
 
         if params['model'] == 'MIDA':
             domain_ft = MIDA.site_information_mat(phenotype_raw, num_subjects, num_domains)
@@ -391,12 +391,12 @@ def train_10CV(params, num_subjects, subject_IDs, features, y_data, y, phenotype
 
         if connectivity in ['TPE', 'TE']:
             try:
-                features = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
+                features = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
             except:
                 print("Tangent features not found. reloading timeseries data")
                 time.sleep(10)
                 process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext)
-                features = Reader.get_networks(subject_IDs, iter_no=k, validation_ext=validation_ext, kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
+                features = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
 
         
         if model == 'MIDA':
