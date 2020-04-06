@@ -1,5 +1,4 @@
 This code provides a python implementation of the second-order functional connectivity feature and domain adaptation approach described in our paper (Improving multi-site autism classification based on site-dependence minimisation and second-order functional connectivity for Autism classification on the ABIDE dataset.)[https://www.biorxiv.org/content/10.1101/2020.02.01.930073v1]
-
 ## Download required packages
 ```
 pip install -r requirements.txt
