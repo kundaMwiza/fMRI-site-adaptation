@@ -22,8 +22,10 @@ import shutil
 import sys
 
 # Input data variables
-root_folder = '/path/to/data/'
+# root_folder = '/path/to/data/'
+root_folder = "/media/shuo/MyDrive/data/brain"
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
+
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -35,65 +37,68 @@ def str2bool(v):
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
+
 def main():
+    parser = argparse.ArgumentParser(description='Download ABIDE data and compute functional connectivity matrices')
+    parser.add_argument('--pipeline', default='cpac', type=str, help='Pipeline to preprocess ABIDE data. Available '
+                                                                     'options are ccs, cpac, dparsf and niak. default: '
+                                                                     'cpac.')
+    parser.add_argument('--atlas', default='cc200', help='Brain parcellation atlas. Options: ho, cc200 and cc400, '
+                                                         'default: cc200.')
+    parser.add_argument('--connectivity', default='correlation', type=str, help='Type of connectivity used for network '
+                                                                                'construction options: correlation, '
+                                                                                'partial correlation, covariance, '
+                                                                                'default: correlation.')
+    parser.add_argument('--download', default=True, type=str2bool, help='Dowload data or just compute functional '
+                                                                        'connectivity. default: True')
+    args = parser.parse_args()
+    print(args)
 
-        parser = argparse.ArgumentParser(description='Download ABIDE data and compute functional connectivity matrices')
-        parser.add_argument('--pipeline', default='cpac', type=str, help='Pipeline to preprocess ABIDE data. Available options are ccs, cpac, dparsf and niak.'
-                                                                        ' default: cpac.')
-        parser.add_argument('--atlas', default='cc200', help='Brain parcellation atlas. Options: ho, cc200 and cc400, default: cc200.')
-        parser.add_argument('--connectivity', default='correlation', type=str, help='Type of connectivity used for network '
-                                                                        'construction '
-                                                                        'options: correlation, partial correlation, '
-                                                                        'covariance, default: correlation.')
-        parser.add_argument('--download', default=True, type=str2bool, help='Dowload data or just compute functional connectivity. default: True')
-        args = parser.parse_args()
-        print(args)
+    params = dict()
 
-        params = dict()
+    pipeline = args.pipeline
+    atlas = args.atlas
+    connectivity = args.connectivity
+    download = args.download
 
-        pipeline = args.pipeline
-        atlas = args.atlas
-        connectivity = args.connectivity
-        download = args.download
+    # Files to fetch
 
-        # Files to fetch
-        
-        files = ['rois_' + atlas]
+    files = ['rois_' + atlas]
 
+    filemapping = {'func_preproc': 'func_preproc.nii.gz',
+                   files[0]: files[0] + '.1D'}
 
-        filemapping = {'func_preproc': 'func_preproc.nii.gz',
-                       files[0]: files[0] + '.1D'}
+    if not os.path.exists(data_folder): os.makedirs(data_folder)
+    shutil.copyfile('./subject_IDs.txt', os.path.join(data_folder, 'subject_IDs.txt'))
 
-        if not os.path.exists(data_folder): os.makedirs(data_folder)
-        shutil.copyfile('./subject_IDs.txt', os.path.join(data_folder, 'subject_IDs.txt'))
+    # Download database files
+    if download:
+        abide = datasets.fetch_abide_pcp(data_dir=root_folder, pipeline=pipeline, band_pass_filtering=True,
+                                         global_signal_regression=False, derivatives=files, quality_checked=False)
 
-        # Download database files
-        if download == True:
-                abide = datasets.fetch_abide_pcp(data_dir=root_folder, pipeline=pipeline,
-                                                band_pass_filtering=True, global_signal_regression=False, derivatives=files, quality_checked=False)                                
+    subject_IDs = Reader.get_ids()
+    subject_IDs = subject_IDs.tolist()
 
-        subject_IDs = Reader.get_ids()
-        subject_IDs = subject_IDs.tolist()
+    # Create a folder for each subject
+    for s, fname in zip(subject_IDs, Reader.fetch_filenames(subject_IDs, files[0], atlas)):
+        subject_folder = os.path.join(data_folder, s)
+        if not os.path.exists(subject_folder):
+            os.mkdir(subject_folder)
 
-        # Create a folder for each subject
-        for s, fname in zip(subject_IDs, Reader.fetch_filenames(subject_IDs, files[0], atlas)):
-                subject_folder = os.path.join(data_folder, s)     
-                if not os.path.exists(subject_folder):
-                        os.mkdir(subject_folder)
+        # Get the base filename for each subject
+        base = fname.split(files[0])[0]
 
-                # Get the base filename for each subject
-                base = fname.split(files[0])[0]
+        # Move each subject file to the subject folder
+        for fl in files:
+            if not os.path.exists(os.path.join(subject_folder, base + filemapping[fl])):
+                shutil.move(base + filemapping[fl], subject_folder)
 
-                # Move each subject file to the subject folder
-                for fl in files:
-                        if not os.path.exists(os.path.join(subject_folder, base + filemapping[fl])):
-                                shutil.move(base + filemapping[fl], subject_folder)
+    time_series = Reader.get_timeseries(subject_IDs, atlas)
 
-        time_series = Reader.get_timeseries(subject_IDs, atlas)
+    # Compute and save connectivity matrices
+    if connectivity in ['correlation', 'partial correlation', 'covariance']:
+        Reader.subject_connectivity(time_series, subject_IDs, atlas, connectivity)
 
-        # Compute and save connectivity matrices
-        if connectivity in ['correlation', 'partial correlation', 'covariance']:
-                Reader.subject_connectivity(time_series, subject_IDs, atlas, connectivity)
 
 if __name__ == '__main__':
-        main()
+    main()

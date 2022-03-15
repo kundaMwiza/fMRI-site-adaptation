@@ -33,7 +33,7 @@ from imports import KHSIC as KHSIC
 from imports import MIDA as MIDA
 from imports import preprocess_data as Reader
 
-root_folder = '/path/to/data/'
+root_folder = "/media/shuo/MyDrive/data/brain"
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 
 # Transform test data using the transformer learned on the training data
