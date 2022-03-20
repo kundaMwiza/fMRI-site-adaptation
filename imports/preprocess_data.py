@@ -42,7 +42,7 @@ data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 phenotype = os.path.join(root_folder, 'ABIDE_pcp/Phenotypic_V1_0b_preprocessed1.csv')
 
 
-def fetch_filenames(subject_IDs, file_type, atlas):
+def fetch_filenames(subject_ids, file_type, atlas):
     """
         subject_list : list of short subject IDs in string format
         file_type    : must be one of the available file types
@@ -59,15 +59,15 @@ def fetch_filenames(subject_IDs, file_type, atlas):
     filenames = []
 
     # Fill list with requested file paths
-    for i in range(len(subject_IDs)):
+    for i in range(len(subject_ids)):
         os.chdir(data_folder)
         try:
             try:
                 os.chdir(data_folder)
-                filenames.append(glob.glob('*' + subject_IDs[i] + filemapping[file_type])[0])
+                filenames.append(glob.glob('*' + subject_ids[i] + filemapping[file_type])[0])
             except:
-                os.chdir(data_folder + '/' + subject_IDs[i])
-                filenames.append(glob.glob('*' + subject_IDs[i] + filemapping[file_type])[0])
+                os.chdir(data_folder + '/' + subject_ids[i])
+                filenames.append(glob.glob('*' + subject_ids[i] + filemapping[file_type])[0])
         except IndexError:
             filenames.append('N/A')
     return filenames
@@ -95,6 +95,28 @@ def get_timeseries(subject_list, atlas_name, silence=False):
     return timeseries
 
 
+def get_conn_vec(data, connectivity, discard_diagonal=False):
+    setattr(connectivity, "vectorize", True)
+    setattr(connectivity, "discard_diagonal", discard_diagonal)
+    return connectivity.transform(data)
+
+
+def vec2mat(conn_vec, n_rois, discard_diagonal=False):
+    """
+    nilearn takes the lower triangle of connectivity matrix
+    """
+    conn_mat = np.ones((n_rois, n_rois))
+    if discard_diagonal:
+        il = np.tril_indices(n_rois, k=-1)
+    else:
+        il = np.tril_indices(n_rois, k=0)
+    conn_mat[il] = conn_vec
+    conn_mat = conn_mat.T
+    conn_mat[il] = conn_vec
+
+    return conn_mat
+
+
 #  compute connectivity matrices
 def subject_connectivity(
         timeseries,
@@ -106,7 +128,8 @@ def subject_connectivity(
         validation_ext='10CV',
         n_subjects='',
         save=True,
-        save_path=data_folder):
+        save_path=data_folder,
+        discard_diagonal=False):
     """
         timeseries   : timeseries table for subject (timepoints x regions)
         subjects     : subject IDs
@@ -120,24 +143,27 @@ def subject_connectivity(
         connectivity : connectivity matrix (regions x regions)
     """
 
-    if kind in ['TPE', 'TE', 'correlation']:
-        if kind not in ['TPE', 'TE']:
-            conn_measure = connectome.ConnectivityMeasure(kind=kind)
-            connectivity = conn_measure.fit_transform(timeseries)
-        else:
-            if kind == 'TPE':
-                conn_measure = connectome.ConnectivityMeasure(kind='correlation')
-                conn_mat = conn_measure.fit_transform(timeseries)
-                conn_measure = connectome.ConnectivityMeasure(kind='tangent')
-                connectivity_fit = conn_measure.fit(conn_mat)
-                connectivity = connectivity_fit.transform(conn_mat)
-            else:
-                conn_measure = connectome.ConnectivityMeasure(kind='tangent')
-                connectivity_fit = conn_measure.fit(timeseries)
-                connectivity = connectivity_fit.transform(timeseries)
+    if kind in ['tangent', 'correlation', 'partial correlation', 'covariance']:
+        data = timeseries.copy()
+        conn_measure = connectome.ConnectivityMeasure(kind=kind)
+        if kind != 'tangent':
+            discard_diagonal = True
+    elif kind == 'TPE':
+        conn_measure = connectome.ConnectivityMeasure(kind='correlation')
+        conn_mat = conn_measure.fit_transform(timeseries)
+        data = conn_mat.copy()
+        conn_measure = connectome.ConnectivityMeasure(kind='tangent')
+    else:
+        raise ValueError("Unsupported connectivity %s" % kind)
+
+    connectivity_fit = conn_measure.fit(data)
+    connectivity = conn_measure.transform(data)
+    conn_vec = get_conn_vec(data, connectivity_fit, discard_diagonal)
 
     if save:
-        if kind not in ['TPE', 'TE']:
+        out_vec_file = os.path.join(save_path, "%s.mat" % kind)
+        sio.savemat(out_vec_file, {'connectivity': conn_vec})
+        if kind != "TPE":
             for i, subj_id in enumerate(subjects):
                 subject_file = os.path.join(save_path, subj_id,
                                             subj_id + '_' + atlas_name + '_' + kind.replace(' ', '_') + '.mat')
@@ -158,15 +184,15 @@ def get_ids(num_subjects=None):
     """
 
     return:
-        subject_IDs    : list of all subject IDs
+        subject_ids    : list of all subject IDs
     """
 
-    subject_IDs = np.genfromtxt(os.path.join(data_folder, 'subject_IDs.txt'), dtype=str)
+    subject_ids = np.genfromtxt(os.path.join(data_folder, 'subject_ids.txt'), dtype=str)
 
     if num_subjects is not None:
-        subject_IDs = subject_IDs[:num_subjects]
+        subject_ids = subject_ids[:num_subjects]
 
-    return subject_IDs
+    return subject_ids
 
 
 # Get phenotype values for a list of subjects
@@ -260,7 +286,7 @@ def get_networks(subject_list, kind, iter_no='', seed=1234, validation_ext='10CV
     for subject in subject_list:
         if len(kind.split()) == 2:
             kind = '_'.join(kind.split())
-        if kind not in ['TPE', 'TE']:
+        if kind not in ['TPE', 'tangent']:
             fl = os.path.join(data_folder, subject,
                               subject + "_" + atlas_name + "_" + kind.replace(' ', '_') + ".mat")
         else:
@@ -271,7 +297,7 @@ def get_networks(subject_list, kind, iter_no='', seed=1234, validation_ext='10CV
         matrix = sio.loadmat(fl)[variable]
         all_networks.append(matrix)
 
-    if kind in ['TE', 'TPE']:
+    if kind in ['tangent', 'TPE']:
         norm_networks = [mat for mat in all_networks]
     else:
         norm_networks = [np.arctanh(mat) for mat in all_networks]

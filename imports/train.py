@@ -24,17 +24,17 @@ from sklearn.metrics import accuracy_score
 import sklearn.metrics
 import scipy.stats as sc
 import scipy.io as sio
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import StratifiedKFold
-from sklearn.linear_model import RidgeClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sklearn.linear_model import LogisticRegression, RidgeClassifier
+from sklearn import svm
+# from sklearn.svm import LinearSVC
 from imports import KHSIC as KHSIC
 from imports import MIDA as MIDA
-from imports import preprocess_data as Reader
+from imports import preprocess_data as reader
 
 root_folder = "/media/shuo/MyDrive/data/brain"
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
+
 
 # Transform test data using the transformer learned on the training data
 def process_test_data(timeseries, transformer, ids, params, k, seed, validation_ext):
@@ -51,24 +51,28 @@ def process_test_data(timeseries, transformer, ids, params, k, seed, validation_
     kind = params['connectivity']
 
     for i, subj_id in enumerate(ids):
-        subject_file = os.path.join(save_path, subj_id,
-                        subj_id + '_' + atlas_name + '_' + kind.replace(' ', '_') + '_' + str(k) + '_' + str(seed) + '_' + validation_ext + str(params['n_subjects'])+'.mat')
+        subject_file = os.path.join(save_path, subj_id, subj_id + '_' + atlas_name + '_' + kind.replace(' ', '_') + '_'
+                                    + str(k) + '_' + str(seed) + '_' + validation_ext + str(params['n_subjects']) +
+                                    '.mat')
         sio.savemat(subject_file, {'connectivity': connectivity[i]})  
-    
+
+
 # Process timeseries for tangent train/test split
-def process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext):
+def process_timeseries(subject_ids, train_ind, test_ind, params, k, seed, validation_ext):
     atlas = params['atlas']
     kind = params['connectivity']
-    timeseries = Reader.get_timeseries(subject_IDs, atlas, silence=True)
+    timeseries = reader.get_timeseries(subject_ids, atlas, silence=True)
     train_timeseries = [timeseries[i] for i in train_ind]
-    subject_IDs_train = [subject_IDs[i] for i in train_ind]
+    subject_ids_train = [subject_ids[i] for i in train_ind]
     test_timeseries = [timeseries[i] for i in test_ind]
-    subject_IDs_test = [subject_IDs[i] for i in test_ind]
+    subject_IDs_test = [subject_ids[i] for i in test_ind]
     
     print('computing tangent connectivity features..')
-    transformer = Reader.subject_connectivity(train_timeseries, subject_IDs_train, atlas, kind, k, seed, validation_ext, n_subjects=params['n_subjects'])
+    transformer = reader.subject_connectivity(train_timeseries, subject_ids_train, atlas, kind, k, seed, validation_ext,
+                                              n_subjects=params['n_subjects'])
     test_data_save = process_test_data(test_timeseries, transformer, subject_IDs_test, params, k, seed, validation_ext)   
-    
+
+
 # Grid search CV 
 def grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=None, domain_ft=None, label_info=None):
     
@@ -112,7 +116,7 @@ def grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=N
             for h in h_vals:
                 x_data = features
                 x_data = MIDA.MIDA(x_data, domain_ft, mu=mu, h=h, labels=False)
-                if add_phenotypes == True:
+                if add_phenotypes:
                     x_data = np.concatenate([x_data, phenotype_ft], axis=1)
                 clf = GridSearchCV(alg, parameters, cv=5)
                 clf.fit(x_data[train_ind], y[train_ind].ravel())
@@ -124,7 +128,7 @@ def grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=N
 
     else:
         x_data = features
-        if add_phenotypes == True:
+        if add_phenotypes:
             x_data = np.concatenate([x_data, phenotype_ft], axis=1)
         clf = GridSearchCV(alg, parameters, cv=5)
         clf.fit(x_data[train_ind], y[train_ind].ravel())
@@ -134,8 +138,9 @@ def grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=N
     
     return best_model
 
+
 # Ensemble models with different FC measures 
-def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, phenotype_raw):
+def leave_one_site_out_ensemble(params, num_subjects, subject_ids, features, y_data, y, phenotype_ft, phenotype_raw):
     results_acc = []
     results_auc = []
     all_pred_acc = np.zeros(y.shape)
@@ -148,9 +153,8 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_d
     validation_ext = params['validation_ext']
     filename = params['filename']
     connectivities = {0: 'correlation', 1: 'TPE', 2: 'TE'}
-    features_c = Reader.get_networks(subject_IDs, iter_no='', kind='correlation', atlas_name=atlas)
+    features_c = reader.get_networks(subject_ids, iter_no='', kind='correlation', atlas_name=atlas)
     add_phenotypes = params['phenotypes']
-
 
     for i in range(num_domains):
         k = i
@@ -159,23 +163,27 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_d
 
         # load tangent pearson features
         try:
-            features_t = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind='TPE', n_subjects=params['n_subjects'], atlas_name=atlas)
+            features_t = reader.get_networks(subject_ids, iter_no=k, seed=seed, validation_ext=validation_ext,
+                                             kind='TPE', n_subjects=params['n_subjects'], atlas_name=atlas)
         except:
             print("Tangent features not found. reloading timeseries data")
             time.sleep(10)
             params['connectivity'] = 'TPE'
-            process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext)
-            features_t = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind='TPE', n_subjects=params['n_subjects'], atlas_name=atlas)
+            process_timeseries(subject_ids, train_ind, test_ind, params, k, seed, validation_ext)
+            features_t = reader.get_networks(subject_ids, iter_no=k, seed=seed, validation_ext=validation_ext,
+                                             kind='TPE', n_subjects=params['n_subjects'], atlas_name=atlas)
         
         # load tangent timeseries features
         try:
-            features_tt = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind='TE', n_subjects=params['n_subjects'], atlas_name=atlas)
+            features_tt = reader.get_networks(subject_ids, iter_no=k, seed=seed, validation_ext=validation_ext,
+                                              kind='TE', n_subjects=params['n_subjects'], atlas_name=atlas)
         except:
             print("Tangent features not found. reloading timeseries data")
             time.sleep(10)
             params['connectivity'] = 'TE'
-            process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext)
-            features_tt = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind='TE', n_subjects=params['n_subjects'], atlas_name=atlas)
+            process_timeseries(subject_ids, train_ind, test_ind, params, k, seed, validation_ext)
+            features_tt = reader.get_networks(subject_ids, iter_no=k, seed=seed, validation_ext=validation_ext,
+                                              kind='TE', n_subjects=params['n_subjects'], atlas_name=atlas)
         
         # all loaded features
         features = [features_c, features_t, features_tt]
@@ -185,7 +193,8 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_d
         if params['model'] == 'MIDA':
             domain_ft = MIDA.site_information_mat(phenotype_raw, num_subjects, num_domains)
             for ft in range(3):
-                best_model = grid_search(params, train_ind, test_ind, features[ft], y, y_data, phenotype_ft=phenotype_ft, domain_ft=domain_ft)
+                best_model = grid_search(params, train_ind, test_ind, features[ft], y, y_data,
+                                         phenotype_ft=phenotype_ft, domain_ft=domain_ft)
                 print('for', connectivities[ft], ', best parameters from 5CV grid search are: \n', best_model)
                 x_data = MIDA.MIDA(features[ft], domain_ft, mu=best_model['mu'], h=best_model['h'], labels=False)
                 best_model.pop('mu')
@@ -202,7 +211,6 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_d
                 all_best_models.append(best_model)
                 x_data_ft.append(features[ft])
 
-        
         algs = []
         preds_binary = []
         preds_decision = []
@@ -245,8 +253,7 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_d
         print("Linear Accuracy: " + str(lin_acc))
         print("Linear AUC: "+str(lin_auc))
         print("-"*100)
-
-    avg_acc = np.array(results_acc).mean()  
+    avg_acc = np.array(results_acc).mean()
     std_acc = np.array(results_acc).std()
     avg_auc = np.array(results_auc).mean()
     std_auc = np.array(results_auc).std()
@@ -264,6 +271,7 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_d
     all_results['ACC'] = results_acc
     all_results['AUC'] = results_auc
     all_results.to_csv(filename + '.csv')
+
 
 # leave one site out application performance
 def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, phenotype_raw):
@@ -289,16 +297,19 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
             
         if connectivity in ['TPE', 'TE']:
             try:
-                features = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
+                features = reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext,
+                                               kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
             except:
                 print("Tangent features not found. reloading timeseries data")
                 time.sleep(10)
                 process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext)
-                features = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
+                features = reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext,
+                                               kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
 
         if params['model'] == 'MIDA':
             domain_ft = MIDA.site_information_mat(phenotype_raw, num_subjects, num_domains)
-            best_model = grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=phenotype_ft, domain_ft=domain_ft)
+            best_model = grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=phenotype_ft,
+                                     domain_ft=domain_ft)
             print('best parameters from 5CV grid search: \n', best_model)
             x_data = MIDA.MIDA(features, domain_ft, mu=best_model['mu'], h=best_model['h'], labels=False)
             best_model.pop('mu')
@@ -344,7 +355,7 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
         print("Linear AUC: "+str(lin_auc))
         print("-"*100)
 
-    avg_acc = np.array(results_acc).mean()  
+    avg_acc = np.array(results_acc).mean()
     std_acc = np.array(results_acc).std()
     avg_auc = np.array(results_auc).mean()
     std_auc = np.array(results_auc).std()
@@ -391,17 +402,19 @@ def train_10CV(params, num_subjects, subject_IDs, features, y_data, y, phenotype
 
         if connectivity in ['TPE', 'TE']:
             try:
-                features = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
+                features = reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext,
+                                               kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
             except:
                 print("Tangent features not found. reloading timeseries data")
                 time.sleep(10)
                 process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext)
-                features = Reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext, kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
+                features = reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext,
+                                               kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
 
-        
         if model == 'MIDA':
             domain_ft = MIDA.site_information_mat(phenotype_raw, num_subjects, num_domains)
-            best_model = grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=phenotype_ft, domain_ft=domain_ft)
+            best_model = grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=phenotype_ft,
+                                     domain_ft=domain_ft)
             print('best parameters from 5CV grid search: \n', best_model)
             x_data = MIDA.MIDA(features, domain_ft, mu=best_model['mu'], h=best_model['h'], labels=False)
             best_model.pop('mu')

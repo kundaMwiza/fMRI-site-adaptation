@@ -18,78 +18,70 @@ import sys
 import argparse
 import pandas as pd
 import numpy as np
-from imports import preprocess_data as Reader
+from imports import preprocess_data as reader
 from imports import train as train
+from imports.utils import str2bool
 import warnings
+
 warnings.filterwarnings("ignore")
 
-# Process boolean command line arguments
-def str2bool(v):
-    if isinstance(v, bool):
-       return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 def main():
-
-    parser = argparse.ArgumentParser(description='Classification of the ABIDE dataset using a Ridge classifier. '
-                                                'MIDA is used to minimize the distribution mismatch between ABIDE sites')
-    parser.add_argument('--atlas', default='cc200', help='Atlas for network construction (node definition) options: ho, cc200, cc400, default: cc200.')
+    parser = argparse.ArgumentParser(description='Classification of the ABIDE dataset using a Ridge classifier. MIDA '
+                                                 'is used to minimize the distribution mismatch between ABIDE sites')
+    parser.add_argument('--atlas', default='cc200', help='Atlas for network construction (node definition) options: '
+                                                         'ho, cc200, cc400, default: cc200.')
     parser.add_argument('--model', default='MIDA', type=str, help='Options: MIDA, raw. default: MIDA.')
-    parser.add_argument('--algorithm', default='Ridge', type=str, help='Options: Ridge, LR (Logistic regression),' 
-                                                                        ' SVM (Support vector machine). default: Ridge.')
+    parser.add_argument('--algorithm', default='Ridge', type=str, help='Options: Ridge, LR (Logistic regression), '
+                                                                       'SVM (Support vector machine). default: Ridge.')
     parser.add_argument('--phenotypes', default=True, type=str2bool, help='Add phenotype features. default: True.')
-    parser.add_argument('--KHSIC', default=True, type=str2bool, help='Compute kernel statistical test of independence between features'
-                                                        ' and site, default True.')
+    parser.add_argument('--KHSIC', default=True, type=str2bool, help='Compute kernel statistical test of independence '
+                                                                     'between features and site, default True.')
     parser.add_argument('--seed', default=123, type=int, help='Seed for random initialisation. default: 1234.')
     parser.add_argument('--connectivity', default='TPE', type=str, help='Type of connectivity used for network '
-                                                                    'construction. options: correlation, TE(tangent embedding), TPE(tangent pearson embedding),'
-                                                                    'default: TPE.')
-    parser.add_argument('--leave_one_out', default=False, type=str2bool, help='leave one site out CV instead of 10CV. default: False.')
+                                                                        'construction. options: correlation, '
+                                                                        'TE(tangent embedding), TPE(tangent pearson '
+                                                                        'embedding), default: TPE.')
+    parser.add_argument('--leave_one_out', default=False, type=str2bool, help='leave one site out CV instead of 10CV. '
+                                                                              'Default: False.')
     parser.add_argument('--filename', default='tangent', type=str, help='filename for output file. default: tangent.')
-    parser.add_argument('--ensemble', default=False, type=str2bool, help='Leave one site out, use ensemble MIDA/raw. default: False')
-    
-    args = parser.parse_args()  
+    parser.add_argument('--ensemble', default=False, type=str2bool, help='Leave one site out, use ensemble MIDA/raw. '
+                                                                         'Default: False')
+
+    args = parser.parse_args()
     print('Arguments: \n', args)
 
     # Ridge classifier parameters
     params = dict()
-
-    params['model'] = args.model                    # MIDA, SMIDA or raw
-    params['phenotypes'] = args.phenotypes          # Add phenotype features 
-    params['seed'] = args.seed                      # seed for random initialisation
+    params['model'] = args.model  # MIDA, SMIDA or raw
+    params['phenotypes'] = args.phenotypes  # Add phenotype features 
+    params['seed'] = args.seed  # seed for random initialisation
     params['ensemble'] = args.ensemble
-    
+
     # Algorithm choice
-    params['algorithm'] = args.algorithm    
-
-    params['KHSIC'] = args.KHSIC                    # Compute kernel statistical test of independence between features and site (boolean)
-
-    params['filename'] = args.filename              # Results output file    
-    params['connectivity'] = args.connectivity      # Type of connectivity used for network construction
-    params['atlas'] = args.atlas                    # Atlas for network construction
-    atlas = args.atlas                              # Atlas for network construction (node definition)
-    connectivity = args.connectivity                # Type of connectivity used for network construction
-
+    params['algorithm'] = args.algorithm
+    # Compute kernel statistical test of independence between features and site (boolean)
+    params['KHSIC'] = args.KHSIC
+    params['filename'] = args.filename  # Results output file    
+    params['connectivity'] = args.connectivity  # Type of connectivity used for network construction
+    params['atlas'] = args.atlas  # Atlas for network construction
+    atlas = args.atlas  # Atlas for network construction (node definition)
+    connectivity = args.connectivity  # Type of connectivity used for network construction
 
     # 10 Fold CV or leave one site out CV
     params['leave_one_out'] = args.leave_one_out
-    if params['leave_one_out'] == True:
+    if params['leave_one_out']:
         params['validation_ext'] = 'LOCV'
     else:
         params['validation_ext'] = '10CV'
-    
+
     # Get subject IDs and class labels
-    subject_IDs = Reader.get_ids()
-    labels = Reader.get_subject_score(subject_IDs, score='DX_GROUP')
-    
+    subject_ids = reader.get_ids()
+    labels = reader.get_subject_score(subject_ids, score='DX_GROUP')
+
     # Number of subjects and classes for binary classification
     num_classes = 2
-    num_subjects = len(subject_IDs)
+    num_subjects = len(subject_ids)
     params['n_subjects'] = num_subjects
 
     # Initialise variables for class labels and acquisition sites
@@ -98,50 +90,48 @@ def main():
 
     # Get class labels for all subjects
     for i in range(num_subjects):
-        y_data[i, int(labels[subject_IDs[i]])-1] = 1
-        y[i] = int(labels[subject_IDs[i]])
+        y_data[i, int(labels[subject_ids[i]]) - 1] = 1
+        y[i] = int(labels[subject_ids[i]])
 
     # Compute feature vectors (vectorised connectivity networks)
     if connectivity not in ['TE', 'TPE']:
-        features = Reader.get_networks(subject_IDs, iter_no='', kind=connectivity, atlas_name=atlas)
+        features = reader.get_networks(subject_ids, iter_no='', kind=connectivity, atlas_name=atlas)
     else:
         features = None
 
     # Source phenotype information and preprocess phenotypes
-    
-    if params['model'] == 'MIDA':
-        pheno_ft = Reader.create_affinity_graph_from_scores(['SEX', 'SITE_ID', 'HANDEDNESS_CATEGORY', 'AGE_AT_SCAN','FIQ', 'VIQ', 'PIQ'], subject_IDs)
-    else:
-        pheno_ft = Reader.create_affinity_graph_from_scores(['SEX', 'SITE_ID','EYE_STATUS_AT_SCAN', 'HANDEDNESS_CATEGORY', 'AGE_AT_SCAN','FIQ', 'VIQ', 'PIQ'], subject_IDs)
 
-    pheno_ft.index = subject_IDs
+    if params['model'] == 'MIDA':
+        pheno_ft = reader.create_affinity_graph_from_scores(['SEX', 'SITE_ID', 'HANDEDNESS_CATEGORY', 'AGE_AT_SCAN',
+                                                             'FIQ', 'VIQ', 'PIQ'], subject_ids)
+    else:
+        pheno_ft = reader.create_affinity_graph_from_scores(['SEX', 'SITE_ID', 'EYE_STATUS_AT_SCAN',
+                                                             'HANDEDNESS_CATEGORY', 'AGE_AT_SCAN', 'FIQ', 'VIQ', 'PIQ'],
+                                                            subject_ids)
+
+    pheno_ft.index = subject_ids
     pheno_ft2 = pheno_ft
 
     # number of sites available in the dataset
     params['num_domains'] = len(pheno_ft2['SITE_ID'].unique())
 
     # preprocess categorical data ordinally
-    pheno_ft = Reader.preprocess_phenotypes(pheno_ft, params)
-    
-    # construct phenotype feature vectors
-    phenotype_ft = Reader.phenotype_ft_vector(pheno_ft, num_subjects, params)
+    pheno_ft = reader.preprocess_phenotypes(pheno_ft, params)
 
-    if params['leave_one_out'] == True:
+    # construct phenotype feature vectors
+    phenotype_ft = reader.phenotype_ft_vector(pheno_ft, num_subjects, params)
+
+    if params['leave_one_out']:
         # leave one site out evaluation
-        if params['ensemble'] == True:
-            train.leave_one_site_out_ensemble(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, pheno_ft)
+        if params['ensemble']:
+            train.leave_one_site_out_ensemble(params, num_subjects, subject_ids, features, y_data, y, phenotype_ft,
+                                              pheno_ft)
         else:
-            train.leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, pheno_ft)
+            train.leave_one_site_out(params, num_subjects, subject_ids, features, y_data, y, phenotype_ft, pheno_ft)
     else:
         # 10 fold CV evaluation
-        train.train_10CV(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, pheno_ft)
+        train.train_10CV(params, num_subjects, subject_ids, features, y_data, y, phenotype_ft, pheno_ft)
 
 
 if __name__ == '__main__':
     main()
-
-
-
-    
-
-

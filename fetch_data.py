@@ -16,7 +16,8 @@
 
 from nilearn import datasets
 import argparse
-from imports import preprocess_data as Reader
+from imports import preprocess_data as reader
+from imports.utils import str2bool
 import os
 import shutil
 import sys
@@ -25,17 +26,6 @@ import sys
 # root_folder = '/path/to/data/'
 root_folder = "/media/shuo/MyDrive/data/brain"
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
-
-
-def str2bool(v):
-    if isinstance(v, bool):
-       return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
 def main():
@@ -48,7 +38,7 @@ def main():
     parser.add_argument('--connectivity', default='correlation', type=str, help='Type of connectivity used for network '
                                                                                 'construction options: correlation, '
                                                                                 'partial correlation, covariance, '
-                                                                                'default: correlation.')
+                                                                                'tangent, TPE. Default: correlation.')
     parser.add_argument('--download', default=True, type=str2bool, help='Dowload data or just compute functional '
                                                                         'connectivity. default: True')
     args = parser.parse_args()
@@ -68,19 +58,20 @@ def main():
     filemapping = {'func_preproc': 'func_preproc.nii.gz',
                    files[0]: files[0] + '.1D'}
 
-    if not os.path.exists(data_folder): os.makedirs(data_folder)
-    shutil.copyfile('./subject_IDs.txt', os.path.join(data_folder, 'subject_IDs.txt'))
+    if not os.path.exists(data_folder):
+        os.makedirs(data_folder)
+    shutil.copyfile('./subject_ids.txt', os.path.join(data_folder, 'subject_ids.txt'))
 
     # Download database files
     if download:
-        abide = datasets.fetch_abide_pcp(data_dir=root_folder, pipeline=pipeline, band_pass_filtering=True,
-                                         global_signal_regression=False, derivatives=files, quality_checked=False)
+        datasets.fetch_abide_pcp(data_dir=root_folder, pipeline=pipeline, band_pass_filtering=True,
+                                 global_signal_regression=False, derivatives=files, quality_checked=False)
 
-    subject_IDs = Reader.get_ids()
-    subject_IDs = subject_IDs.tolist()
+    subject_ids = reader.get_ids()
+    subject_ids = subject_ids.tolist()
 
     # Create a folder for each subject
-    for s, fname in zip(subject_IDs, Reader.fetch_filenames(subject_IDs, files[0], atlas)):
+    for s, fname in zip(subject_ids, reader.fetch_filenames(subject_ids, files[0], atlas)):
         subject_folder = os.path.join(data_folder, s)
         if not os.path.exists(subject_folder):
             os.mkdir(subject_folder)
@@ -93,11 +84,12 @@ def main():
             if not os.path.exists(os.path.join(subject_folder, base + filemapping[fl])):
                 shutil.move(base + filemapping[fl], subject_folder)
 
-    time_series = Reader.get_timeseries(subject_IDs, atlas)
+    time_series = reader.get_timeseries(subject_ids, atlas)
 
     # Compute and save connectivity matrices
-    if connectivity in ['correlation', 'partial correlation', 'covariance']:
-        Reader.subject_connectivity(time_series, subject_IDs, atlas, connectivity)
+    # if connectivity in ['correlation', 'partial correlation', 'covariance']:
+    if connectivity in ["correlation", 'partial correlation', 'covariance', 'tangent', "TPE"]:
+        reader.subject_connectivity(time_series, subject_ids, atlas, connectivity)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 function [Z,Ez,Ew,W,Wi] = maLRR(T,S,Dim,Maxiter,alaph,beta)
-
+    
 mu = 1e-5;tol = 1e-8;max_mu = 1e6;rho =1.2;iter = 0;
 [d,m] = size(T);M = length(S);Z = cell(1,M);Wi = cell(1,M);
 W = eye(Dim,d);Ew = cell(1,M);Ez = cell(1,M);F = cell(1,M);Y1 = cell(1,M);
