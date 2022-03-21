@@ -14,27 +14,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
+import csv
+import glob
 import os
 import warnings
-import glob
-import csv
-import re
+
 import numpy as np
 import scipy.io as sio
-import sys
+# import re
+# import sys
 from nilearn import connectome
 import pandas as pd
-from scipy.spatial import distance
-from scipy import signal
+# from scipy.spatial import distance
+# from scipy import signal
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import Normalizer, OrdinalEncoder, OneHotEncoder, StandardScaler
+# from sklearn.preprocessing import Normalizer, OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OrdinalEncoder
 from utils import root_dir_default, data_folder_name_default
 
 warnings.filterwarnings("ignore")
 
 
-def fetch_filenames(subject_ids, file_type, atlas, data_path):
+def fetch_filenames(subject_ids, file_type, atlas, data_folder):
     """
         subject_list : list of short subject IDs in string format
         file_type    : must be one of the available file types
@@ -49,7 +50,7 @@ def fetch_filenames(subject_ids, file_type, atlas, data_path):
                    'rois_' + atlas: '_rois_' + atlas + '.1D'}
     # The list to be filled
     filenames = []
-    data_folder = data_path.get_data_folder()
+    # data_folder = data_path.get_data_folder()
     # Fill list with requested file paths
     for i in range(len(subject_ids)):
         os.chdir(data_folder)
@@ -77,7 +78,7 @@ def get_timeseries(subject_list, atlas_name, data_path, silence=False):
 
     timeseries = []
     for i in range(len(subject_list)):
-        subject_folder = os.path.join(data_path.get_data_folder(), subject_list[i])
+        subject_folder = os.path.join(data_path, subject_list[i])
         ro_file = [f for f in os.listdir(subject_folder) if f.endswith('_rois_' + atlas_name + '.1D')]
         fl = os.path.join(subject_folder, ro_file[0])
         if not silence:
@@ -113,7 +114,7 @@ def vec2mat(conn_vec, n_rois, discard_diagonal=False):
 def subject_connectivity(
         timeseries,
         # subjects,
-        atlas_name,
+        atlas,
         kind,
         # iter_no='',
         # seed=1234,
@@ -157,7 +158,7 @@ def subject_connectivity(
     if save:
         if save_path is None:
             save_path = os.path.join(root_dir_default, data_folder_name_default)
-        out_vec_file = os.path.join(save_path, "%s_%s.mat" % (atlas_name, kind))
+        out_vec_file = os.path.join(save_path, "%s_%s.mat" % (atlas, kind))
         sio.savemat(out_vec_file, {'connectivity': conn_vec})
         # if kind != "TPE":
         #     for i, subj_id in enumerate(subjects):
@@ -176,14 +177,14 @@ def subject_connectivity(
 
 
 # Get the list of subject IDs
-def get_ids(data_path, num_subjects=None):
+def get_ids(fpath, num_subjects=None):
     """
 
     return:
         subject_ids    : list of all subject IDs
     """
 
-    subject_ids = np.genfromtxt(os.path.join(data_path.get_data_folder(), 'subject_ids.txt'), dtype=str)
+    subject_ids = np.genfromtxt(os.path.join(fpath, 'subject_ids.txt'), dtype=str)
 
     if num_subjects is not None:
         subject_ids = subject_ids[:num_subjects]
@@ -192,9 +193,8 @@ def get_ids(data_path, num_subjects=None):
 
 
 # Get phenotype values for a list of subjects
-def get_subject_score(subject_list, score, data_path):
+def get_subject_score(subject_list, score, pheno_fpath):
     scores_dict = {}
-    pheno_fpath = data_path.get_pheno_fpath()
     with open(pheno_fpath) as csv_file:
         reader = csv.DictReader(csv_file)
         for row in reader:
@@ -267,10 +267,11 @@ def phenotype_ft_vector(pheno_ft, num_subjects, params):
 
 # Load precomputed fMRI connectivity networks
 def get_networks(subject_list, kind, data_path, iter_no='', seed=1234, validation_ext='10CV', n_subjects='',
-                 atlas_name="aal", variable='connectivity'):
+                 atlas="aal", variable='connectivity'):
     """
         subject_list : list of subject IDs
         kind         : the kind of connectivity to be used, e.g. lasso, partial correlation, correlation
+        data_path    : DataPath.
         atlas_name   : name of the parcellation atlas used
         variable     : variable name in the .mat file that has been used to save the precomputed networks
 
@@ -301,15 +302,14 @@ def get_networks(subject_list, kind, data_path, iter_no='', seed=1234, validatio
     # idx = np.triu_indices_from(all_networks[0], 1)
     # vec_networks = [mat[idx] for mat in norm_networks]
     # matrix = np.vstack(vec_networks)
-    data_folder = data_path.get_data_folder()
-    fl = os.path.join(data_folder, "%s_%s.mat" % (atlas_name, kind))
+    fl = os.path.join(data_path, "%s_%s.mat" % (atlas, kind))
     conn_matrix = sio.loadmat(fl)[variable]
 
     return conn_matrix
 
 
 # Construct the adjacency matrix of the population from phenotypic scores
-def create_affinity_graph_from_scores(scores, subject_list, data_path):
+def create_affinity_graph_from_scores(scores, subject_list, pheno_fpath):
     """
         scores       : list of phenotypic information to be used to construct the affinity graph
         subject_list : list of subject IDs
@@ -323,7 +323,7 @@ def create_affinity_graph_from_scores(scores, subject_list, data_path):
 
     for i, l in enumerate(scores):
         phenos = []
-        label_dict = get_subject_score(subject_list, l, data_path)
+        label_dict = get_subject_score(subject_list, l, pheno_fpath)
 
         # quantitative phenotypic scores
         if l in ['AGE_AT_SCAN', 'FIQ']:

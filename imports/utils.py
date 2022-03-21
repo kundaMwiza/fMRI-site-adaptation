@@ -41,3 +41,12 @@ class DataPath:
 
     def get_pheno_fpath(self):
         return self._pheno_fpath
+
+
+def arg_parse():
+    """Parsing arguments"""
+    parser = argparse.ArgumentParser(description="Multi-Site fMRI ASD Classification")
+    parser.add_argument("--cfg", required=True, help="path to config file", type=str)
+
+    args = parser.parse_args()
+    return args

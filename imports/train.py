@@ -19,9 +19,8 @@ import time
 import pandas as pd
 import numpy as np
 from nilearn import connectome
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import accuracy_score
-import sklearn.metrics
+# from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score, roc_auc_score
 import scipy.stats as sc
 import scipy.io as sio
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
@@ -31,58 +30,61 @@ from sklearn import svm
 from imports import KHSIC as KHSIC
 from imports import MIDA as MIDA
 from imports import preprocess_data as reader
+from utils import root_dir_default, data_folder_name_default
+
 
 # root_folder = "D:/ML_data/brain/qc"
 # data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 
 
 # Transform test data using the transformer learned on the training data
-def process_test_data(timeseries, transformer, ids, params, k, seed, validation_ext):
+def process_test_data(timeseries, transformer, ids, params, k, seed, validation_ext, save_path=None):
     conn_measure = connectome.ConnectivityMeasure(kind='correlation')
     test_data = conn_measure.fit_transform(timeseries)
 
-    if params['connectivity'] == 'TE':
+    if params['connectivity'] == 'tangent':
         connectivity = transformer.transform(timeseries)
     else:
         connectivity = transformer.transform(test_data)
 
-    save_path = data_folder
+    if save_path is None:
+        save_path = os.path.join(root_dir_default, data_folder_name_default)
     atlas_name = params['atlas']
     kind = params['connectivity']
 
     for i, subj_id in enumerate(ids):
         subject_file = os.path.join(save_path, subj_id, subj_id + '_' + atlas_name + '_' + kind.replace(' ', '_') + '_'
-                                    + str(k) + '_' + str(seed) + '_' + validation_ext + str(params['n_subjects']) +
+                                    + str(k) + '_' + str(seed) + '_' + validation_ext + str(params['n_subs']) +
                                     '.mat')
-        sio.savemat(subject_file, {'connectivity': connectivity[i]})  
+        sio.savemat(subject_file, {'connectivity': connectivity[i]})
+
+    # Process timeseries for tangent train/test split
 
 
-# Process timeseries for tangent train/test split
 def process_timeseries(subject_ids, train_ind, test_ind, params, k, seed, validation_ext):
     atlas = params['atlas']
     kind = params['connectivity']
-    timeseries = reader.get_timeseries(subject_ids, atlas, silence=True)
+    data_path = params["data_path"]
+    timeseries = reader.get_timeseries(subject_ids, atlas, silence=True, data_path=data_path)
     train_timeseries = [timeseries[i] for i in train_ind]
     subject_ids_train = [subject_ids[i] for i in train_ind]
     test_timeseries = [timeseries[i] for i in test_ind]
-    subject_IDs_test = [subject_ids[i] for i in test_ind]
-    
+    subject_ids_test = [subject_ids[i] for i in test_ind]
+
     print('computing tangent connectivity features..')
-    transformer = reader.subject_connectivity(train_timeseries, subject_ids_train, atlas, kind, k, seed, validation_ext,
-                                              n_subjects=params['n_subjects'])
-    test_data_save = process_test_data(test_timeseries, transformer, subject_IDs_test, params, k, seed, validation_ext)   
+    transformer = reader.subject_connectivity(train_timeseries, subject_ids_train, atlas, kind, k, seed)
+    test_data_save = process_test_data(test_timeseries, transformer, subject_ids_test, params, k, seed, validation_ext)
 
 
 # Grid search CV 
 def grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=None, domain_ft=None, label_info=None):
-    
     # MIDA parameter search
     mu_vals = [0.5, 0.75, 1.0]
     h_vals = [50, 150, 300]
 
     # Add phenotypes or not
     add_phenotypes = params['phenotypes']
-    
+
     # Algorithm choice
     algorithm = params['algorithm']
 
@@ -110,7 +112,7 @@ def grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=N
         alpha_vals = [0.25, 0.5, 0.75]
         parameters = {'alpha': alpha_vals}
         alg = RidgeClassifier(random_state=seed)
-    
+
     if model in ['MIDA', 'SMIDA']:
         for mu in mu_vals:
             for h in h_vals:
@@ -134,13 +136,13 @@ def grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=N
         clf.fit(x_data[train_ind], y[train_ind].ravel())
         if clf.best_score_ > best_model['acc']:
             best_model = dict(best_model, **clf.best_params_)
-            best_model['acc'] = clf.best_score_ 
-    
+            best_model['acc'] = clf.best_score_
+
     return best_model
 
 
 # Ensemble models with different FC measures 
-def leave_one_site_out_ensemble(params, num_subjects, subject_ids, features, y_data, y, phenotype_ft, phenotype_raw):
+def leave_one_site_out_ensemble(params, subject_ids, features, y_data, y, phenotype_ft, phenotype_raw):
     results_acc = []
     results_auc = []
     all_pred_acc = np.zeros(y.shape)
@@ -149,11 +151,13 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_ids, features, y_d
     algorithm = params['algorithm']
     seed = params['seed']
     atlas = params['atlas']
-    num_domains = params['num_domains']
+    num_domains = params['n_domains']
     validation_ext = params['validation_ext']
     filename = params['filename']
+    num_subjects = params["n_subs"]
+    data_path = params["data_path"]
     connectivities = {0: 'correlation', 1: 'TPE', 2: 'TE'}
-    features_c = reader.get_networks(subject_ids, iter_no='', kind='correlation', atlas_name=atlas)
+    features_c = reader.get_networks(subject_ids, kind='correlation', data_path=data_path, iter_no='', atlas=atlas)
     add_phenotypes = params['phenotypes']
 
     for i in range(num_domains):
@@ -163,31 +167,36 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_ids, features, y_d
 
         # load tangent pearson features
         try:
-            features_t = reader.get_networks(subject_ids, iter_no=k, seed=seed, validation_ext=validation_ext,
-                                             kind='TPE', n_subjects=params['n_subjects'], atlas_name=atlas)
+            pass
         except:
+            features_t = reader.get_networks(subject_ids, kind='TPE', data_path=data_path, iter_no=k, seed=seed,
+                                             validation_ext=validation_ext, n_subjects=params['n_subs'],
+                                             atlas=atlas)
             print("Tangent features not found. reloading timeseries data")
             time.sleep(10)
             params['connectivity'] = 'TPE'
             process_timeseries(subject_ids, train_ind, test_ind, params, k, seed, validation_ext)
-            features_t = reader.get_networks(subject_ids, iter_no=k, seed=seed, validation_ext=validation_ext,
-                                             kind='TPE', n_subjects=params['n_subjects'], atlas_name=atlas)
-        
+            features_t = reader.get_networks(subject_ids, kind='TPE', data_path=data_path, iter_no=k, seed=seed,
+                                             validation_ext=validation_ext, n_subjects=params['n_subs'],
+                                             atlas=atlas)
+
         # load tangent timeseries features
         try:
-            features_tt = reader.get_networks(subject_ids, iter_no=k, seed=seed, validation_ext=validation_ext,
-                                              kind='TE', n_subjects=params['n_subjects'], atlas_name=atlas)
+            features_tt = reader.get_networks(subject_ids, kind='TE', data_path=data_path, iter_no=k, seed=seed,
+                                              validation_ext=validation_ext, n_subjects=params['n_subs'],
+                                              atlas=atlas)
         except:
             print("Tangent features not found. reloading timeseries data")
             time.sleep(10)
             params['connectivity'] = 'TE'
             process_timeseries(subject_ids, train_ind, test_ind, params, k, seed, validation_ext)
-            features_tt = reader.get_networks(subject_ids, iter_no=k, seed=seed, validation_ext=validation_ext,
-                                              kind='TE', n_subjects=params['n_subjects'], atlas_name=atlas)
-        
+            features_tt = reader.get_networks(subject_ids, kind='TE', data_path=data_path, iter_no=k, seed=seed,
+                                              validation_ext=validation_ext, n_subjects=params['n_subs'],
+                                              atlas=atlas)
+
         # all loaded features
         features = [features_c, features_t, features_tt]
-        
+
         all_best_models = []
         x_data_ft = []
         if params['model'] == 'MIDA':
@@ -226,15 +235,15 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_ids, features, y_d
                 clf = svm.SVC(kernel='linear', random_state=seed, **all_best_models[ft])
             else:
                 clf = RidgeClassifier(random_state=seed, **all_best_models[ft])
-            
+
             algs.append(clf.fit(x_data_ft[ft][train_ind], y[train_ind].ravel()))
             preds_binary.append(clf.predict(x_data_ft[ft][test_ind]))
             preds_decision.append(clf.decision_function(x_data_ft[ft][test_ind]))
-        
+
         # mode prediciton
-        mode_predictions = sc.mode(np.hstack([preds_binary[j][np.newaxis].T for j in range(3)]), axis = 1)[0].ravel()
+        mode_predictions = sc.mode(np.hstack([preds_binary[j][np.newaxis].T for j in range(3)]), axis=1)[0].ravel()
         all_pred_acc[test_ind, :] = mode_predictions[:, np.newaxis]
-        
+
         # Compute the accuracy
         lin_acc = accuracy_score(y[test_ind].ravel(), mode_predictions)
 
@@ -243,29 +252,29 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_ids, features, y_d
         all_pred_auc[test_ind, :] = mean_predictions[:, np.newaxis]
 
         # Compute the AUC
-        lin_auc = sklearn.metrics.roc_auc_score(y[test_ind], mean_predictions)
-        
+        lin_auc = roc_auc_score(y[test_ind], mean_predictions)
+
         # append accuracy and AUC to respective lists
         results_acc.append(lin_acc)
         results_auc.append(lin_auc)
-        print("-"*100)
+        print("-" * 100)
         print("Fold number: %d" % k)
         print("Linear Accuracy: " + str(lin_acc))
-        print("Linear AUC: "+str(lin_auc))
-        print("-"*100)
+        print("Linear AUC: " + str(lin_auc))
+        print("-" * 100)
     avg_acc = np.array(results_acc).mean()
     std_acc = np.array(results_acc).std()
     avg_auc = np.array(results_auc).mean()
     std_auc = np.array(results_auc).std()
-    weighted_acc = (y == all_pred_acc).sum()/params['n_subjects']
-    weighted_auc = sklearn.metrics.roc_auc_score(y, all_pred_auc)
+    weighted_acc = (y == all_pred_acc).sum() / params['n_subs']
+    weighted_auc = roc_auc_score(y, all_pred_auc)
 
     print("accuracy average", avg_acc)
     print("standard deviation accuracy", std_acc)
     print("auc average", avg_auc)
     print("standard deviation auc", std_auc)
-    print("(weighted) accuracy",  weighted_acc)
-    print("(weighted) auc",  weighted_auc)
+    print("(weighted) accuracy", weighted_acc)
+    print("(weighted) auc", weighted_auc)
 
     all_results = pd.DataFrame()
     all_results['ACC'] = results_acc
@@ -274,8 +283,7 @@ def leave_one_site_out_ensemble(params, num_subjects, subject_ids, features, y_d
 
 
 # leave one site out application performance
-def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, phenotype_raw):
-
+def leave_one_site_out(params, subject_ids, features, y_data, y, phenotype_ft, phenotype_raw):
     results_acc = []
     results_auc = []
     all_pred_acc = np.zeros(y.shape)
@@ -285,26 +293,29 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
     seed = params['seed']
     connectivity = params['connectivity']
     atlas = params['atlas']
-    num_domains = params['num_domains']
+    num_domains = params['n_domains']
     validation_ext = params['validation_ext']
     filename = params['filename']
     add_phenotypes = params['phenotypes']
-
+    num_subjects = params["n_subs"]
+    data_path = params["data_path"]
     for i in range(num_domains):
         k = i
         train_ind = np.where(phenotype_raw[:, 1] != i)[0]
         test_ind = np.where(phenotype_raw[:, 1] == i)[0]
-            
+
         if connectivity in ['TPE', 'TE']:
             try:
-                features = reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext,
-                                               kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
+                features = reader.get_networks(subject_ids, kind=connectivity, data_path=data_path, iter_no=k,
+                                               seed=seed, validation_ext=validation_ext,
+                                               n_subjects=params['n_subs'], atlas=atlas)
             except:
                 print("Tangent features not found. reloading timeseries data")
                 time.sleep(10)
-                process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext)
-                features = reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext,
-                                               kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
+                process_timeseries(subject_ids, train_ind, test_ind, params, k, seed, validation_ext)
+                features = reader.get_networks(subject_ids, kind=connectivity, data_path=data_path, iter_no=k,
+                                               seed=seed, validation_ext=validation_ext,
+                                               n_subjects=params['n_subs'], atlas=atlas)
 
         if params['model'] == 'MIDA':
             domain_ft = MIDA.site_information_mat(phenotype_raw, num_subjects, num_domains)
@@ -318,13 +329,13 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
             best_model = grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=phenotype_ft)
             print('best parameters from 5CV grid search: \n', best_model)
             x_data = features
-        
-        if add_phenotypes == True:
+
+        if add_phenotypes:
             x_data = np.concatenate([x_data, phenotype_ft], axis=1)
 
         # Remove accuracy key from best model dictionary
         best_model.pop('acc')
-        
+
         # Set classifier
         if algorithm == 'LR':
             clf = LogisticRegression(random_state=seed, solver='lbfgs', **best_model)
@@ -344,30 +355,30 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
         # Compute the AUC
         pred = clf.decision_function(x_data[test_ind, :])
         all_pred_auc[test_ind, :] = pred[:, np.newaxis]
-        lin_auc = sklearn.metrics.roc_auc_score(y[test_ind], pred)
-        
+        lin_auc = roc_auc_score(y[test_ind], pred)
+
         # append accuracy and AUC to respective lists
         results_acc.append(lin_acc)
         results_auc.append(lin_auc)
-        print("-"*100)
+        print("-" * 100)
         print("Fold number: %d" % k)
         print("Linear Accuracy: " + str(lin_acc))
-        print("Linear AUC: "+str(lin_auc))
-        print("-"*100)
+        print("Linear AUC: " + str(lin_auc))
+        print("-" * 100)
 
     avg_acc = np.array(results_acc).mean()
     std_acc = np.array(results_acc).std()
     avg_auc = np.array(results_auc).mean()
     std_auc = np.array(results_auc).std()
-    weighted_acc = (y == all_pred_acc).sum()/params['n_subjects']
-    weighted_auc = sklearn.metrics.roc_auc_score(y, all_pred_auc)
-    
+    weighted_acc = (y == all_pred_acc).sum() / params['n_subs']
+    weighted_auc = roc_auc_score(y, all_pred_auc)
+
     print("(unweighted) accuracy average", avg_acc)
     print("(unweighted) standard deviation accuracy", std_acc)
     print("(unweighted) auc average", avg_auc)
     print("(unweighted) standard deviation auc", std_auc)
-    print("(weighted) accuracy",  weighted_acc)
-    print("(weighted) auc",  weighted_auc)
+    print("(weighted) accuracy", weighted_acc)
+    print("(weighted) auc", weighted_auc)
 
     all_results = pd.DataFrame()
     all_results['ACC'] = results_acc
@@ -376,8 +387,7 @@ def leave_one_site_out(params, num_subjects, subject_IDs, features, y_data, y, p
 
 
 # 10 fold CV 
-def train_10CV(params, num_subjects, subject_IDs, features, y_data, y, phenotype_ft, phenotype_raw):
-    
+def train_10CV(params, subject_IDs, features, y_data, y, phenotype_ft, phenotype_raw):
     results_acc = []
     results_auc = []
 
@@ -385,31 +395,34 @@ def train_10CV(params, num_subjects, subject_IDs, features, y_data, y, phenotype
     seed = params['seed']
     connectivity = params['connectivity']
     atlas = params['atlas']
-    num_domains = params['num_domains']
+    num_domains = params['n_domains']
     model = params['model']
     add_phenotypes = params['phenotypes']
     filename = params['filename']
     validation_ext = params['validation_ext']
-
+    num_subjects = params["n_subs"]
+    data_path = params["data_path"]
     if seed == 123:
         skf = StratifiedKFold(n_splits=10)
     else:
         skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=seed)
 
-    for sets, k in zip(list(reversed(list(skf.split(np.zeros(num_subjects), np.squeeze(y))))), list(range(10))):            
+    for sets, k in zip(list(reversed(list(skf.split(np.zeros(num_subjects), np.squeeze(y))))), list(range(10))):
         train_ind = sets[0]
         test_ind = sets[1]
 
-        if connectivity in ['TPE', 'TE']:
+        if connectivity in ['TPE', 'tangent']:
             try:
-                features = reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext,
-                                               kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
+                features = reader.get_networks(subject_IDs, kind=connectivity, data_path=data_path, iter_no=k,
+                                               seed=seed, validation_ext=validation_ext,
+                                               n_subjects=params['n_subs'], atlas=atlas)
             except:
                 print("Tangent features not found. reloading timeseries data")
                 time.sleep(10)
                 process_timeseries(subject_IDs, train_ind, test_ind, params, k, seed, validation_ext)
-                features = reader.get_networks(subject_IDs, iter_no=k, seed=seed, validation_ext=validation_ext,
-                                               kind=connectivity, n_subjects=params['n_subjects'], atlas_name=atlas)
+                features = reader.get_networks(subject_IDs, kind=connectivity, data_path=data_path, iter_no=k,
+                                               seed=seed, validation_ext=validation_ext,
+                                               n_subjects=params['n_subs'], atlas=atlas)
 
         if model == 'MIDA':
             domain_ft = MIDA.site_information_mat(phenotype_raw, num_subjects, num_domains)
@@ -425,12 +438,12 @@ def train_10CV(params, num_subjects, subject_IDs, features, y_data, y, phenotype
             print('best parameters from 5CV grid search: \n', best_model)
             x_data = features
 
-        if add_phenotypes == True:
+        if add_phenotypes:
             x_data = np.concatenate([x_data, phenotype_ft], axis=1)
-        
+
         # Remove accuracy key from best model dictionary
         best_model.pop('acc')
-        
+
         # Set classifier
         if algorithm == 'LR':
             clf = LogisticRegression(random_state=seed, solver='lbfgs', **best_model)
@@ -447,18 +460,18 @@ def train_10CV(params, num_subjects, subject_IDs, features, y_data, y, phenotype
 
         # Compute the AUC
         pred = clf.decision_function(x_data[test_ind, :])
-        lin_auc = sklearn.metrics.roc_auc_score(y[test_ind], pred)
-        
+        lin_auc = roc_auc_score(y[test_ind], pred)
+
         # append accuracy and AUC to respective lists
         results_acc.append(lin_acc)
         results_auc.append(lin_auc)
-        print("-"*100)
+        print("-" * 100)
         print("Fold number: %d" % k)
         print("Linear Accuracy: " + str(lin_acc))
-        print("Linear AUC: "+str(lin_auc))
-        print("-"*100)
+        print("Linear AUC: " + str(lin_auc))
+        print("-" * 100)
 
-    avg_acc = np.array(results_acc).mean()  
+    avg_acc = np.array(results_acc).mean()
     std_acc = np.array(results_acc).std()
     avg_auc = np.array(results_auc).mean()
     std_auc = np.array(results_auc).std()
@@ -468,10 +481,10 @@ def train_10CV(params, num_subjects, subject_IDs, features, y_data, y, phenotype
     print("standard deviation auc", std_auc)
 
     # compute statistical test of independence
-    if params['KHSIC'] == True and model == 'MIDA':
-        test_stat, threshold, pval = KHSIC.hsic_gam(features, domain_ft, alph = 0.05)
-        pval = 1-pval
-        print('KHSIC sample value: %.2f' % test_stat,'Threshold: %.2f' % threshold, 'p value: %.10f' % pval) 
+    if params['KHSIC'] and model == 'MIDA':
+        test_stat, threshold, pval = KHSIC.hsic_gam(features, domain_ft, alph=0.05)
+        pval = 1 - pval
+        print('KHSIC sample value: %.2f' % test_stat, 'Threshold: %.2f' % threshold, 'p value: %.10f' % pval)
 
     all_results = pd.DataFrame()
     all_results['ACC'] = results_acc
