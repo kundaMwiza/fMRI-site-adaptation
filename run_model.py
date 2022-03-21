@@ -73,7 +73,7 @@ def main():
     params['algorithm'] = cfg.METHOD.ALGORITHM
     # Compute kernel statistical test of independence between features and site (boolean)
     params['KHSIC'] = cfg.METHOD.KHSIC
-    params['filename'] = cfg.METHOD.OUT_FILE  # Results output file
+    params['filename'] = cfg.OUTPUT.OUT_FILE  # Results output file
     params['connectivity'] = cfg.METHOD.CONNECTIVITY  # Type of connectivity used for network construction
     params['atlas'] = cfg.DATASET.ATLAS  # Atlas for network construction
 
@@ -112,7 +112,7 @@ def main():
         y[i] = int(labels[subject_ids[i]])
 
     # Compute feature vectors (vectorised connectivity networks)
-    if connectivity not in ['TE', 'TPE']:
+    if connectivity not in ['tangent', 'TPE']:
         features = reader.get_networks(subject_ids, kind=connectivity, data_path=data_folder, iter_no='', atlas=atlas)
     else:
         features = None

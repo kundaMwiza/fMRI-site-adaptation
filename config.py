@@ -22,13 +22,7 @@ _C.DATASET.ATLAS = "cc200"
 _C.DATASET.PHENO_FILE = 'ABIDE_pcp/Phenotypic_V1_0b_preprocessed1.csv'
 _C.DATASET.PIPELINE = "cpac"
 # ---------------------------------------------------------------------------- #
-# Image processing
-# ---------------------------------------------------------------------------- #
-_C.PROC = CN()
-_C.PROC.SCALE = 2
-
-# ---------------------------------------------------------------------------- #
-# Visualization
+# ML METHOD SETUP
 # ---------------------------------------------------------------------------- #
 _C.METHOD = CN()
 _C.METHOD.MODEL = "MIDA"
@@ -38,21 +32,14 @@ _C.METHOD.CONNECTIVITY = "TPE"
 _C.METHOD.ALGORITHM = "Ridge"
 _C.METHOD.LOVO = True
 _C.METHOD.ENSEMBLE = False
-
-# ---------------------------------------------------------------------------- #
-# Machine learning pipeline
-# ---------------------------------------------------------------------------- #
-_C.PIPELINE = CN()
-_C.PIPELINE.CLASSIFIER = "linear_svc"  # ["svc", "linear_svc", "lr"]
-
 # ---------------------------------------------------------------------------- #
 # Misc options
 # ---------------------------------------------------------------------------- #
 _C.OUTPUT = CN()
 _C.OUTPUT.ROOT = "/media/shuo/MyDrive/data/brain"  # output_dir
 _C.OUTPUT.SAVE_FEATURE = True
-_C.OUTPUT.SAVE_PATH = "/media/shuo/MyDrive/data/brain/ABIDE_pcp/cpac/"
-_C.OUTPUT.OUT_FILE = ""
+_C.OUTPUT.OUT_PATH = "/media/shuo/MyDrive/data/brain/ABIDE_pcp/cpac/filt_noglobal/"
+_C.OUTPUT.OUT_FILE = "TPE"
 
 
 def get_cfg_defaults():

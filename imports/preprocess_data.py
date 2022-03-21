@@ -30,7 +30,7 @@ import pandas as pd
 from sklearn.compose import ColumnTransformer
 # from sklearn.preprocessing import Normalizer, OneHotEncoder, StandardScaler
 from sklearn.preprocessing import OrdinalEncoder
-from utils import root_dir_default, data_folder_name_default
+from .utils import root_dir_default, data_folder_name_default
 
 warnings.filterwarnings("ignore")
 
@@ -121,8 +121,7 @@ def subject_connectivity(
         # validation_ext='10CV',
         # n_subjects='',
         save=True,
-        save_path=None,
-        discard_diagonal=False):
+        out_path=None):
     """
         timeseries   : timeseries table for subject (timepoints x regions)
         subjects     : subject IDs
@@ -137,28 +136,27 @@ def subject_connectivity(
     """
 
     if kind in ['tangent', 'correlation', 'partial correlation', 'covariance']:
-        data = timeseries.copy()
-        conn_measure = connectome.ConnectivityMeasure(kind=kind, vectorize=True)
+        input_data = timeseries.copy()
+        conn_measure = connectome.ConnectivityMeasure(kind=kind, vectorize=True, discard_diagonal=True)
         if kind != 'tangent':
             # discard_diagonal = True
-            setattr(conn_measure, "discard_diagonal", True)
+            setattr(conn_measure, "discard_diagonal", False)
     elif kind == 'TPE':
         conn_measure = connectome.ConnectivityMeasure(kind='correlation')
-        corr_mat = conn_measure.fit_transform(timeseries)
-        data = corr_mat.copy()
-        conn_measure = connectome.ConnectivityMeasure(kind='tangent', vectorize=True, discard_diagonal=True)
+        input_data = conn_measure.fit_transform(timeseries)
+        conn_measure = connectome.ConnectivityMeasure(kind='tangent', vectorize=True, discard_diagonal=False)
     else:
         raise ValueError("Unsupported connectivity %s" % kind)
 
-    conn_measure.fit(data)
+    conn_measure.fit(input_data)
     # connectivity = conn_measure.transform(data)
     # conn_vec = get_conn_vec(data, connectivity_fit, discard_diagonal)
-    conn_vec = conn_measure.transform(data)
+    conn_vec = conn_measure.transform(input_data)
 
     if save:
-        if save_path is None:
-            save_path = os.path.join(root_dir_default, data_folder_name_default)
-        out_vec_file = os.path.join(save_path, "%s_%s.mat" % (atlas, kind))
+        if out_path is None:
+            out_path = os.path.join(root_dir_default, data_folder_name_default)
+        out_vec_file = os.path.join(out_path, "%s_%s.mat" % (atlas, kind))
         sio.savemat(out_vec_file, {'connectivity': conn_vec})
         # if kind != "TPE":
         #     for i, subj_id in enumerate(subjects):
