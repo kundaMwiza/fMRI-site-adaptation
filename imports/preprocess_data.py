@@ -136,23 +136,22 @@ def subject_connectivity(
     """
 
     if kind in ['tangent', 'correlation', 'partial correlation', 'covariance']:
-        data = timeseries.copy()
+        input_data = timeseries.copy()
         conn_measure = connectome.ConnectivityMeasure(kind=kind, vectorize=True, discard_diagonal=True)
         if kind != 'tangent':
             # discard_diagonal = True
             setattr(conn_measure, "discard_diagonal", False)
     elif kind == 'TPE':
         conn_measure = connectome.ConnectivityMeasure(kind='correlation')
-        corr_mat = conn_measure.fit_transform(timeseries)
-        data = corr_mat.copy()
+        input_data = conn_measure.fit_transform(timeseries)
         conn_measure = connectome.ConnectivityMeasure(kind='tangent', vectorize=True, discard_diagonal=False)
     else:
         raise ValueError("Unsupported connectivity %s" % kind)
 
-    conn_measure.fit(data)
+    conn_measure.fit(input_data)
     # connectivity = conn_measure.transform(data)
     # conn_vec = get_conn_vec(data, connectivity_fit, discard_diagonal)
-    conn_vec = conn_measure.transform(data)
+    conn_vec = conn_measure.transform(input_data)
 
     if save:
         if out_path is None:
