@@ -24,7 +24,8 @@ import sys
 
 # Input data variables
 # root_folder = '/path/to/data/'
-root_folder = "/media/shuo/MyDrive/data/brain"
+# root_folder = "/media/shuo/MyDrive/data/brain"
+root_folder = "D:/ML_data/brain/qc"
 data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 
 
@@ -65,7 +66,7 @@ def main():
     # Download database files
     if download:
         datasets.fetch_abide_pcp(data_dir=root_folder, pipeline=pipeline, band_pass_filtering=True,
-                                 global_signal_regression=False, derivatives=files, quality_checked=False)
+                                 global_signal_regression=False, derivatives=files, quality_checked=True)
 
     subject_ids = reader.get_ids()
     subject_ids = subject_ids.tolist()

@@ -28,21 +28,13 @@ import pandas as pd
 from scipy.spatial import distance
 from scipy import signal
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import Normalizer
-from sklearn.preprocessing import OrdinalEncoder
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import Normalizer, OrdinalEncoder, OneHotEncoder, StandardScaler
+from utils import root_dir_default, data_folder_name_default
 
 warnings.filterwarnings("ignore")
 
-# Input data variables
 
-root_folder = "/media/shuo/MyDrive/data/brain"
-data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
-phenotype = os.path.join(root_folder, 'ABIDE_pcp/Phenotypic_V1_0b_preprocessed1.csv')
-
-
-def fetch_filenames(subject_ids, file_type, atlas):
+def fetch_filenames(subject_ids, file_type, atlas, data_path):
     """
         subject_list : list of short subject IDs in string format
         file_type    : must be one of the available file types
@@ -57,7 +49,7 @@ def fetch_filenames(subject_ids, file_type, atlas):
                    'rois_' + atlas: '_rois_' + atlas + '.1D'}
     # The list to be filled
     filenames = []
-
+    data_folder = data_path.get_data_folder()
     # Fill list with requested file paths
     for i in range(len(subject_ids)):
         os.chdir(data_folder)
@@ -74,7 +66,7 @@ def fetch_filenames(subject_ids, file_type, atlas):
 
 
 # Get timeseries arrays for list of subjects
-def get_timeseries(subject_list, atlas_name, silence=False):
+def get_timeseries(subject_list, atlas_name, data_path, silence=False):
     """
         subject_list : list of short subject IDs in string format
         atlas_name   : the atlas based on which the timeseries are generated e.g. aal, cc200
@@ -85,7 +77,7 @@ def get_timeseries(subject_list, atlas_name, silence=False):
 
     timeseries = []
     for i in range(len(subject_list)):
-        subject_folder = os.path.join(data_folder, subject_list[i])
+        subject_folder = os.path.join(data_path.get_data_folder(), subject_list[i])
         ro_file = [f for f in os.listdir(subject_folder) if f.endswith('_rois_' + atlas_name + '.1D')]
         fl = os.path.join(subject_folder, ro_file[0])
         if not silence:
@@ -95,10 +87,10 @@ def get_timeseries(subject_list, atlas_name, silence=False):
     return timeseries
 
 
-def get_conn_vec(data, connectivity, discard_diagonal=False):
-    setattr(connectivity, "vectorize", True)
-    setattr(connectivity, "discard_diagonal", discard_diagonal)
-    return connectivity.transform(data)
+# def get_conn_vec(data, connectivity, discard_diagonal=False):
+#     setattr(connectivity, "vectorize", True)
+#     setattr(connectivity, "discard_diagonal", discard_diagonal)
+#     return connectivity.transform(data)
 
 
 def vec2mat(conn_vec, n_rois, discard_diagonal=False):
@@ -120,15 +112,15 @@ def vec2mat(conn_vec, n_rois, discard_diagonal=False):
 #  compute connectivity matrices
 def subject_connectivity(
         timeseries,
-        subjects,
+        # subjects,
         atlas_name,
         kind,
-        iter_no='',
-        seed=1234,
-        validation_ext='10CV',
-        n_subjects='',
+        # iter_no='',
+        # seed=1234,
+        # validation_ext='10CV',
+        # n_subjects='',
         save=True,
-        save_path=data_folder,
+        save_path=None,
         discard_diagonal=False):
     """
         timeseries   : timeseries table for subject (timepoints x regions)
@@ -145,49 +137,53 @@ def subject_connectivity(
 
     if kind in ['tangent', 'correlation', 'partial correlation', 'covariance']:
         data = timeseries.copy()
-        conn_measure = connectome.ConnectivityMeasure(kind=kind)
+        conn_measure = connectome.ConnectivityMeasure(kind=kind, vectorize=True)
         if kind != 'tangent':
-            discard_diagonal = True
+            # discard_diagonal = True
+            setattr(conn_measure, "discard_diagonal", True)
     elif kind == 'TPE':
         conn_measure = connectome.ConnectivityMeasure(kind='correlation')
-        conn_mat = conn_measure.fit_transform(timeseries)
-        data = conn_mat.copy()
-        conn_measure = connectome.ConnectivityMeasure(kind='tangent')
+        corr_mat = conn_measure.fit_transform(timeseries)
+        data = corr_mat.copy()
+        conn_measure = connectome.ConnectivityMeasure(kind='tangent', vectorize=True, discard_diagonal=True)
     else:
         raise ValueError("Unsupported connectivity %s" % kind)
 
-    connectivity_fit = conn_measure.fit(data)
-    connectivity = conn_measure.transform(data)
-    conn_vec = get_conn_vec(data, connectivity_fit, discard_diagonal)
+    conn_measure.fit(data)
+    # connectivity = conn_measure.transform(data)
+    # conn_vec = get_conn_vec(data, connectivity_fit, discard_diagonal)
+    conn_vec = conn_measure.transform(data)
 
     if save:
-        out_vec_file = os.path.join(save_path, "%s.mat" % kind)
+        if save_path is None:
+            save_path = os.path.join(root_dir_default, data_folder_name_default)
+        out_vec_file = os.path.join(save_path, "%s_%s.mat" % (atlas_name, kind))
         sio.savemat(out_vec_file, {'connectivity': conn_vec})
-        if kind != "TPE":
-            for i, subj_id in enumerate(subjects):
-                subject_file = os.path.join(save_path, subj_id,
-                                            subj_id + '_' + atlas_name + '_' + kind.replace(' ', '_') + '.mat')
-                sio.savemat(subject_file, {'connectivity': connectivity[i]})
-            return connectivity
-        else:
-            for i, subj_id in enumerate(subjects):
-                subject_file = os.path.join(save_path, subj_id,
-                                            subj_id + '_' + atlas_name + '_' + kind.replace(' ', '_') + '_' + str(
-                                                iter_no) + '_' + str(seed) + '_' + validation_ext + str(
-                                                n_subjects) + '.mat')
-                sio.savemat(subject_file, {'connectivity': connectivity[i]})
-            return connectivity_fit
+        # if kind != "TPE":
+        #     for i, subj_id in enumerate(subjects):
+        #         subject_file = os.path.join(save_path, subj_id,
+        #                                     subj_id + '_' + atlas_name + '_' + kind.replace(' ', '_') + '.mat')
+        #         sio.savemat(subject_file, {'connectivity': connectivity[i]})
+        #     return connectivity
+        # else:
+        #     for i, subj_id in enumerate(subjects):
+        #         subject_file = os.path.join(save_path, subj_id,
+        #                                     subj_id + '_' + atlas_name + '_' + kind.replace(' ', '_') + '_' + str(
+        #                                         iter_no) + '_' + str(seed) + '_' + validation_ext + str(
+        #                                         n_subjects) + '.mat')
+        #         sio.savemat(subject_file, {'connectivity': connectivity[i]})
+        #     return connectivity_fit
 
 
 # Get the list of subject IDs
-def get_ids(num_subjects=None):
+def get_ids(data_path, num_subjects=None):
     """
 
     return:
         subject_ids    : list of all subject IDs
     """
 
-    subject_ids = np.genfromtxt(os.path.join(data_folder, 'subject_ids.txt'), dtype=str)
+    subject_ids = np.genfromtxt(os.path.join(data_path.get_data_folder(), 'subject_ids.txt'), dtype=str)
 
     if num_subjects is not None:
         subject_ids = subject_ids[:num_subjects]
@@ -196,10 +192,10 @@ def get_ids(num_subjects=None):
 
 
 # Get phenotype values for a list of subjects
-def get_subject_score(subject_list, score):
+def get_subject_score(subject_list, score, data_path):
     scores_dict = {}
-
-    with open(phenotype) as csv_file:
+    pheno_fpath = data_path.get_pheno_fpath()
+    with open(pheno_fpath) as csv_file:
         reader = csv.DictReader(csv_file)
         for row in reader:
             if row['SUB_ID'] in subject_list:
@@ -270,8 +266,8 @@ def phenotype_ft_vector(pheno_ft, num_subjects, params):
 
 
 # Load precomputed fMRI connectivity networks
-def get_networks(subject_list, kind, iter_no='', seed=1234, validation_ext='10CV', n_subjects='', atlas_name="aal",
-                 variable='connectivity'):
+def get_networks(subject_list, kind, data_path, iter_no='', seed=1234, validation_ext='10CV', n_subjects='',
+                 atlas_name="aal", variable='connectivity'):
     """
         subject_list : list of subject IDs
         kind         : the kind of connectivity to be used, e.g. lasso, partial correlation, correlation
@@ -282,35 +278,38 @@ def get_networks(subject_list, kind, iter_no='', seed=1234, validation_ext='10CV
         matrix      : feature matrix of connectivity networks (num_subjects x network_size)
     """
 
-    all_networks = []
-    for subject in subject_list:
-        if len(kind.split()) == 2:
-            kind = '_'.join(kind.split())
-        if kind not in ['TPE', 'tangent']:
-            fl = os.path.join(data_folder, subject,
-                              subject + "_" + atlas_name + "_" + kind.replace(' ', '_') + ".mat")
-        else:
-            fl = os.path.join(data_folder, subject,
-                              subject + "_" + atlas_name + "_" + kind.replace(' ', '_') + '_' + str(
-                                  iter_no) + '_' + str(seed) + '_' + validation_ext + str(n_subjects) + ".mat")
+    # all_networks = []
+    # for subject in subject_list:
+    #     if len(kind.split()) == 2:
+    #         kind = '_'.join(kind.split())
+    #     if kind not in ['TPE', 'tangent']:
+    #         fl = os.path.join(data_folder, subject,
+    #                           subject + "_" + atlas_name + "_" + kind.replace(' ', '_') + ".mat")
+    #     else:
+    #         fl = os.path.join(data_folder, subject,
+    #                           subject + "_" + atlas_name + "_" + kind.replace(' ', '_') + '_' + str(
+    #                               iter_no) + '_' + str(seed) + '_' + validation_ext + str(n_subjects) + ".mat")
+    #
+    #     matrix = sio.loadmat(fl)[variable]
+    #     all_networks.append(matrix)
+    #
+    # if kind in ['tangent', 'TPE']:
+    #     norm_networks = [mat for mat in all_networks]
+    # else:
+    #     norm_networks = [np.arctanh(mat) for mat in all_networks]
+    #
+    # idx = np.triu_indices_from(all_networks[0], 1)
+    # vec_networks = [mat[idx] for mat in norm_networks]
+    # matrix = np.vstack(vec_networks)
+    data_folder = data_path.get_data_folder()
+    fl = os.path.join(data_folder, "%s_%s.mat" % (atlas_name, kind))
+    conn_matrix = sio.loadmat(fl)[variable]
 
-        matrix = sio.loadmat(fl)[variable]
-        all_networks.append(matrix)
-
-    if kind in ['tangent', 'TPE']:
-        norm_networks = [mat for mat in all_networks]
-    else:
-        norm_networks = [np.arctanh(mat) for mat in all_networks]
-
-    idx = np.triu_indices_from(all_networks[0], 1)
-    vec_networks = [mat[idx] for mat in norm_networks]
-    matrix = np.vstack(vec_networks)
-
-    return matrix
+    return conn_matrix
 
 
 # Construct the adjacency matrix of the population from phenotypic scores
-def create_affinity_graph_from_scores(scores, subject_list):
+def create_affinity_graph_from_scores(scores, subject_list, data_path):
     """
         scores       : list of phenotypic information to be used to construct the affinity graph
         subject_list : list of subject IDs
@@ -324,7 +323,7 @@ def create_affinity_graph_from_scores(scores, subject_list):
 
     for i, l in enumerate(scores):
         phenos = []
-        label_dict = get_subject_score(subject_list, l)
+        label_dict = get_subject_score(subject_list, l, data_path)
 
         # quantitative phenotypic scores
         if l in ['AGE_AT_SCAN', 'FIQ']:
