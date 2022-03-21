@@ -30,7 +30,7 @@ from sklearn import svm
 from imports import KHSIC as KHSIC
 from imports import MIDA as MIDA
 from imports import preprocess_data as reader
-from utils import root_dir_default, data_folder_name_default
+from .utils import root_dir_default, data_folder_name_default
 
 
 # root_folder = "D:/ML_data/brain/qc"
@@ -72,7 +72,7 @@ def process_timeseries(subject_ids, train_ind, test_ind, params, k, seed, valida
     subject_ids_test = [subject_ids[i] for i in test_ind]
 
     print('computing tangent connectivity features..')
-    transformer = reader.subject_connectivity(train_timeseries, subject_ids_train, atlas, kind, k, seed)
+    transformer = reader.subject_connectivity(train_timeseries, subject_ids_train, atlas, kind, k)
     test_data_save = process_test_data(test_timeseries, transformer, subject_ids_test, params, k, seed, validation_ext)
 
 

@@ -1,4 +1,4 @@
 DATASET:
   DOWNLOAD: False
 METHOD:
-  CONNECTIVITY: "correlation"
+  CONNECTIVITY: "tangent"

@@ -5,4 +5,4 @@ DATASET:
 METHOD:
   ALGORITHM: "LR"
 OUTPUT:
-  SAVE_PATH: "/media/shuo/MyDrive/data/brain/qc/ABIDE_pcp/cpac/"
+  SAVE_PATH: "/media/shuo/MyDrive/data/brain/qc/ABIDE_pcp/cpac/filt_noglobal/"

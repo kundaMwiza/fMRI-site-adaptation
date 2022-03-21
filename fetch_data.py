@@ -106,7 +106,8 @@ def main():
     # Compute and save connectivity matrices
     # if connectivity in ['correlation', 'partial correlation', 'covariance']:
     if connectivity in ["correlation", 'partial correlation', 'covariance', 'tangent', "TPE"]:
-        reader.subject_connectivity(time_series, subject_ids, atlas, connectivity)
+        # reader.subject_connectivity(time_series, subject_ids, atlas, connectivity)
+        reader.subject_connectivity(time_series, atlas, connectivity, save=True, out_path=cfg.OUTPUT.OUT_PATH)
 
 
 if __name__ == '__main__':
