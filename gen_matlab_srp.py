@@ -6,11 +6,12 @@ dims = [5, 10, 20, 50]
 
 
 def gen_job_srp(target, kind, dim, alpha, beta):
-    srp_fname = "scripts/target_%s_%s_%s_%s_%s.m" % (target, kind, dim, alpha, beta)
+    func_name = "target_%s_%s_%s_%s_%s" % (target, kind, dim, int(alpha * 1000), int(beta * 1000))
+    srp_fname = "scripts/target_%s_%s_%s_%s_%s.m" % (target, kind, dim, int(alpha * 1000), int(beta * 1000))
     srp = open(srp_fname, "w")
+    srp.write("function %s\n" % func_name)
     srp.write("clear;\n")
-    srp.write("input_file = '/shared/tale2/Shared/data/abide/functionals/cpac/"
-              "filt_noglobal/cc200_%s.mat';\n" % kind)
+    srp.write("input_file = '/shared/tale2/Shared/data/abide/functionals/cpac/filt_noglobal/cc200_%s.mat';\n" % kind)
     srp.write("load(input_file)\n")
     srp.write("load('/shared/tale2/Shared/data/abide/functionals/cpac/filt_noglobal/site_label.mat')\n")
     srp.write("target = %s;\n" % target)
@@ -29,8 +30,7 @@ def gen_job_srp(target, kind, dim, alpha, beta):
     srp.write("    end\n")
     srp.write("end\n")
     srp.write("[Z,Ez,Ew,W,Wi] = maLRR(T, S, dim, 50, alpha, beta);\n")
-    srp.write("fname = '/shared/tale2/Shared/data/abide/functionals/cpac/filt_noglobal/"
-              "target_%s_%s_%s_%s_%s_malrr.mat;\n" % (target, kind, dim, alpha, beta))
+    srp.write("fname = '/shared/tale2/Shared/data/abide/functionals/cpac/filt_noglobal/target_%s_%s_%s_%s_%s_malrr.mat;\n" % (target, kind, dim, alpha, beta))
     srp.write("save(fname, 'Z','z','Ew','W','Wi')\n")
     srp.close()
 
@@ -42,9 +42,9 @@ def gen_job_srp(target, kind, dim, alpha, beta):
     job_file.write("#$ -l rmem=16G\n")
     job_file.write("module load apps/matlab/2021b/binary\n")
     job_file.write("\n")
-    job_file.write("cd /shared/tale2/Shared/szhou/code/multi-site-fmri/")
+    job_file.write("cd /shared/tale2/Shared/szhou/code/fmri-malrr/")
     job_file.write("\n")
-    job_file.write("matlab -nodesktop -nosplash -r %s\n" % srp_fname)
+    job_file.write("matlab -nodesktop -nosplash -r %s\n" % func_name)
     job_file.close()
 
     return job_fname
