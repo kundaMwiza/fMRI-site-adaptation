@@ -82,7 +82,7 @@ def main():
     # Download database files
     if download:
         datasets.fetch_abide_pcp(data_dir=root_dir, pipeline=pipeline, band_pass_filtering=True,
-                                 global_signal_regression=False, derivatives=files, quality_checked=True)
+                                 global_signal_regression=False, derivatives=files, quality_checked=cfg.DATASET.QC)
 
     subject_ids = reader.get_ids(data_folder)
     subject_ids = subject_ids.tolist()

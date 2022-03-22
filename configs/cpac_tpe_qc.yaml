@@ -1,8 +1,9 @@
 DATASET:
   ROOT: "/media/shuo/MyDrive/data/brain/qc"
   QC: True
-  DOWNLOAD: False
-METHOD:
-  ALGORITHM: "LR"
+  DOWNLOAD: True
+#METHOD:
+#  ALGORITHM: "LR"
 OUTPUT:
-  SAVE_PATH: "/media/shuo/MyDrive/data/brain/qc/ABIDE_pcp/cpac/filt_noglobal/"
+  ROOT: "/media/shuo/MyDrive/data/brain/qc"
+  OUT_PATH: "/media/shuo/MyDrive/data/brain/qc/ABIDE_pcp/cpac/filt_noglobal/"

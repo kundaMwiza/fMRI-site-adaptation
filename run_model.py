@@ -98,24 +98,25 @@ def main():
     labels = reader.get_subject_score(subject_ids, score='DX_GROUP', pheno_fpath=pheno_fpath)
 
     # Number of subjects and classes for binary classification
-    num_classes = 2
-    num_subjects = len(subject_ids)
-    params['n_subs'] = num_subjects
+    n_classes = 2
+    n_subjects = len(subject_ids)
+    params['n_subs'] = n_subjects
 
     # Initialise variables for class labels and acquisition sites
-    y_data = np.zeros([num_subjects, num_classes])
-    y = np.zeros([num_subjects, 1])
+    y_data = np.zeros([n_subjects, n_classes])
+    y = np.zeros([n_subjects, 1])
 
     # Get class labels for all subjects
-    for i in range(num_subjects):
+    for i in range(n_subjects):
         y_data[i, int(labels[subject_ids[i]]) - 1] = 1
         y[i] = int(labels[subject_ids[i]])
 
     # Compute feature vectors (vectorised connectivity networks)
-    if connectivity not in ['tangent', 'TPE']:
-        features = reader.get_networks(subject_ids, kind=connectivity, data_path=data_folder, iter_no='', atlas=atlas)
-    else:
-        features = None
+    # if connectivity not in ['tangent', 'TPE']:
+    #     features = reader.get_networks(subject_ids, kind=connectivity, data_path=data_folder, iter_no='', atlas=atlas)
+    # else:
+    #     features = None
+    features = reader.get_networks(subject_ids, kind=connectivity, data_path=data_folder, iter_no='', atlas=atlas)
 
     # Source phenotype information and preprocess phenotypes
     if cfg.METHOD.MODEL == 'MIDA':
@@ -135,8 +136,13 @@ def main():
     # preprocess categorical data ordinally
     pheno_ft = reader.preprocess_phenotypes(pheno_ft, params)
 
+    # le = LabelEncoder()
+    # site_label = le.fit_transform(pheno_ft["SITE_ID"].values)
+    # out_site_file = os.path.join(cfg.OUTPUT.OUT_PATH, "site_label.mat")
+    # sio.savemat(out_site_file, {'site_label': site_label})
+
     # construct phenotype feature vectors
-    phenotype_ft = reader.phenotype_ft_vector(pheno_ft, num_subjects, params)
+    phenotype_ft = reader.phenotype_ft_vector(pheno_ft, n_subjects, params)
 
     if params['leave_one_out']:
         # leave one site out evaluation

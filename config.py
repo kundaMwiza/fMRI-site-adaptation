@@ -14,8 +14,8 @@ _C = CN()
 # Dataset
 # -----------------------------------------------------------------------------
 _C.DATASET = CN()
-# _C.DATASET.ROOT = "/media/shuo/MyDrive/data/brain"
-_C.DATASET.ROOT = "D:/ML_data/brain"
+_C.DATASET.ROOT = "/media/shuo/MyDrive/data/brain"
+# _C.DATASET.ROOT = "D:/ML_data/brain"
 _C.DATASET.QC = False
 _C.DATASET.DOWNLOAD = True
 _C.DATASET.BASE_DIR = 'ABIDE_pcp/cpac/filt_noglobal/'
@@ -37,10 +37,10 @@ _C.METHOD.ENSEMBLE = False
 # Misc options
 # ---------------------------------------------------------------------------- #
 _C.OUTPUT = CN()
-# _C.OUTPUT.ROOT = "/media/shuo/MyDrive/data/brain"  # output_dir
-# _C.OUTPUT.OUT_PATH = "/media/shuo/MyDrive/data/brain/ABIDE_pcp/cpac/filt_noglobal/"
-_C.OUTPUT.ROOT = "D:/ML_data/brain"
-_C.OUTPUT.OUT_PATH = "D:/ML_data/brain/ABIDE_pcp/cpac/filt_noglobal/"
+_C.OUTPUT.ROOT = "/media/shuo/MyDrive/data/brain"  # output_dir
+_C.OUTPUT.OUT_PATH = "/media/shuo/MyDrive/data/brain/ABIDE_pcp/cpac/filt_noglobal/"
+# _C.OUTPUT.ROOT = "D:/ML_data/brain"
+# _C.OUTPUT.OUT_PATH = "D:/ML_data/brain/ABIDE_pcp/cpac/filt_noglobal/"
 _C.OUTPUT.SAVE_FEATURE = True
 _C.OUTPUT.OUT_FILE = "TPE"
 

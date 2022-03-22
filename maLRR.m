@@ -18,7 +18,7 @@ for i=1:M
     Y4_tmp{1,i} = zeros(m,size(S{1,i},2));
 end
 while iter < Maxiter
-    iter
+    disp(['Iteration: ',num2str(iter)]);
     iter = iter+1;
     for i=1:M
         temp = Z{1,i} + Y4{1,i}/mu;
