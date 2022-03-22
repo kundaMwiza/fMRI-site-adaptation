@@ -138,7 +138,7 @@ def subject_connectivity(
     if kind in ['tangent', 'correlation', 'partial correlation', 'covariance']:
         input_data = timeseries.copy()
         conn_measure = connectome.ConnectivityMeasure(kind=kind, vectorize=True, discard_diagonal=True)
-        if kind != 'tangent':
+        if kind == 'tangent':
             # discard_diagonal = True
             setattr(conn_measure, "discard_diagonal", False)
     elif kind == 'TPE':
