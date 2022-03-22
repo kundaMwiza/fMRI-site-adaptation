@@ -2,7 +2,7 @@
 kinds = ["TPE"]
 alphas = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
 betas = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
-dims = [5, 10, 20, 50]
+dims = [5, 10, 20, 50, 100]
 
 
 def gen_job_srp(target, kind, dim, alpha, beta):
@@ -12,8 +12,8 @@ def gen_job_srp(target, kind, dim, alpha, beta):
     srp.write("function %s\n" % func_name)
     srp.write("clear;\n")
     srp.write("input_file = '/shared/tale2/Shared/data/abide/functionals/cpac/filt_noglobal/cc200_%s.mat';\n" % kind)
-    srp.write("load(input_file)\n")
-    srp.write("load('/shared/tale2/Shared/data/abide/functionals/cpac/filt_noglobal/site_label.mat')\n")
+    srp.write("load(input_file, 'connectivity')\n")
+    srp.write("load('/shared/tale2/Shared/data/abide/functionals/cpac/filt_noglobal/site_label.mat', 'site_label')\n")
     srp.write("target = %s;\n" % target)
     srp.write("alpha = %s;\n" % alpha)
     srp.write("beta = %s;\n" % beta)
@@ -30,8 +30,8 @@ def gen_job_srp(target, kind, dim, alpha, beta):
     srp.write("    end\n")
     srp.write("end\n")
     srp.write("[Z,Ez,Ew,W,Wi] = maLRR(T, S, dim, 50, alpha, beta);\n")
-    srp.write("fname = '/shared/tale2/Shared/data/abide/functionals/cpac/filt_noglobal/target_%s_%s_%s_%s_%s_malrr.mat;\n" % (target, kind, dim, alpha, beta))
-    srp.write("save(fname, 'Z','z','Ew','W','Wi')\n")
+    srp.write("fname = '/shared/tale2/Shared/data/abide/functionals/cpac/filt_noglobal/target_%s_%s_%s_%s_%s_malrr.mat';\n" % (target, kind, dim, alpha, beta))
+    srp.write("save(fname, 'Z','Ez','Ew','W','Wi')\n")
     srp.close()
 
     job_fname = "scripts/target_%s_%s_%s_%s_%s.sge" % (target, kind, dim, alpha, beta)
@@ -57,11 +57,11 @@ for target in range(20):
         for dim in dims:
             job_fname = gen_job_srp(target, kind, dim, 1, 1)
             qsub_file.write("qsub %s\n" % job_fname)
-        for alpha in alphas:
-            job_fname = gen_job_srp(target, kind, 100, alpha, 1)
-            qsub_file.write("qsub %s\n" % job_fname)
-        for beta in betas:
-            job_fname = gen_job_srp(target, kind, 100, 1, beta)
-            qsub_file.write("qsub %s\n" % job_fname)
+        # for alpha in alphas:
+        #     job_fname = gen_job_srp(target, kind, 100, alpha, 1)
+        #     qsub_file.write("qsub %s\n" % job_fname)
+        # for beta in betas:
+        #     job_fname = gen_job_srp(target, kind, 100, 1, beta)
+        #     qsub_file.write("qsub %s\n" % job_fname)
 
 qsub_file.close()
