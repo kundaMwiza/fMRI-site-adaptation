@@ -85,6 +85,7 @@ def main():
     pheno_fpath = os.path.join(root_dir, cfg.DATASET.PHENO_FILE)
     params["data_path"] = data_folder
     params["pheno_fpath"] = pheno_fpath
+    params["pheno_only"] = cfg.DATASET.PHENO_ONLY
 
     # 10 Fold CV or leave one site out CV
     params['leave_one_out'] = cfg.METHOD.LOVO

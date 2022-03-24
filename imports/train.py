@@ -299,39 +299,44 @@ def leave_one_site_out(params, subject_ids, features, y_data, y, phenotype_ft, p
     add_phenotypes = params['phenotypes']
     num_subjects = params["n_subs"]
     data_path = params["data_path"]
+    pheno_only = params["pheno_only"]
     for i in range(num_domains):
         k = i
         train_ind = np.where(phenotype_raw[:, 1] != i)[0]
         test_ind = np.where(phenotype_raw[:, 1] == i)[0]
 
-        if connectivity in ['TPE', 'TE']:
-            try:
-                features = reader.get_networks(subject_ids, kind=connectivity, data_path=data_path, iter_no=k,
-                                               seed=seed, validation_ext=validation_ext,
-                                               n_subjects=params['n_subs'], atlas=atlas)
-            except:
-                print("Tangent features not found. reloading timeseries data")
-                time.sleep(10)
-                process_timeseries(subject_ids, train_ind, test_ind, params, k, seed, validation_ext)
-                features = reader.get_networks(subject_ids, kind=connectivity, data_path=data_path, iter_no=k,
-                                               seed=seed, validation_ext=validation_ext,
-                                               n_subjects=params['n_subs'], atlas=atlas)
-
-        if params['model'] == 'MIDA':
-            domain_ft = MIDA.site_information_mat(phenotype_raw, num_subjects, num_domains)
-            best_model = grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=phenotype_ft,
-                                     domain_ft=domain_ft)
-            print('best parameters from 5CV grid search: \n', best_model)
-            x_data = MIDA.MIDA(features, domain_ft, mu=best_model['mu'], h=best_model['h'], labels=False)
-            best_model.pop('mu')
-            best_model.pop('h')
+        if pheno_only:
+            best_model = grid_search(params, train_ind, test_ind, phenotype_ft, y, y_data, phenotype_ft=phenotype_ft)
+            x_data = phenotype_ft
         else:
-            best_model = grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=phenotype_ft)
-            print('best parameters from 5CV grid search: \n', best_model)
-            x_data = features
+            if connectivity in ['TPE', 'tangent']:
+                try:
+                    features = reader.get_networks(subject_ids, kind=connectivity, data_path=data_path, iter_no=k,
+                                                   seed=seed, validation_ext=validation_ext,
+                                                   n_subjects=params['n_subs'], atlas=atlas)
+                except:
+                    print("Tangent features not found. reloading timeseries data")
+                    time.sleep(10)
+                    process_timeseries(subject_ids, train_ind, test_ind, params, k, seed, validation_ext)
+                    features = reader.get_networks(subject_ids, kind=connectivity, data_path=data_path, iter_no=k,
+                                                   seed=seed, validation_ext=validation_ext,
+                                                   n_subjects=params['n_subs'], atlas=atlas)
 
-        if add_phenotypes:
-            x_data = np.concatenate([x_data, phenotype_ft], axis=1)
+            if params['model'] == 'MIDA':
+                domain_ft = MIDA.site_information_mat(phenotype_raw, num_subjects, num_domains)
+                best_model = grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=phenotype_ft,
+                                         domain_ft=domain_ft)
+                print('best parameters from 5CV grid search: \n', best_model)
+                x_data = MIDA.MIDA(features, domain_ft, mu=best_model['mu'], h=best_model['h'], labels=False)
+                best_model.pop('mu')
+                best_model.pop('h')
+            else:
+                best_model = grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=phenotype_ft)
+                print('best parameters from 5CV grid search: \n', best_model)
+                x_data = features
+
+            if add_phenotypes:
+                x_data = np.concatenate([x_data, phenotype_ft], axis=1)
 
         # Remove accuracy key from best model dictionary
         best_model.pop('acc')

@@ -1,4 +1,5 @@
 DATASET:
   DOWNLOAD: False
 METHOD:
+  MODAL: "raw"
   CONNECTIVITY: "TPE"

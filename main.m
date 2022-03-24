@@ -2,14 +2,14 @@ clear;
 
 kind = "TPE";
 input_file = "/media/shuo/MyDrive/data/brain/ABIDE_pcp/cpac/filt_noglobal/cc200_" + kind + ".mat";
-load(input_file)
-load("/media/shuo/MyDrive/data/brain/ABIDE_pcp/cpac/filt_noglobal/site_label.mat")
+load(input_file, "connectivity")
+load("/media/shuo/MyDrive/data/brain/ABIDE_pcp/cpac/filt_noglobal/site_label.mat", "site_label")
 
 % [X] = pca(connectivity, 'NumComponents',1000);
 
 alphas = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
 betas = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
-dims = [3, 5, 7, 9, 11, 13, 15];
+dims = [5, 10, 20, 50, 100];
 
 % target = 0;
 n_sites = length(unique(site_label));
@@ -31,9 +31,9 @@ for target=0:n_sites-1
             beta = betas(iter_beta);
             for iter_dim=1:length(dims)
                 dim = dims(iter_dim);
-                [Z,Ez,Ew,W,Wi] = maLRR(T, S, dim, 50, alpha, beta);
+                [Z,Ez,Ew,W,Wi] = maLRR(T, S, dim, 1, alpha, beta);
                 fname = "/media/shuo/MyDrive/data/brain/ABIDE_pcp/cpac/filt_noglobal/" + "target_" + target + "_" + kind + "_" + alpha + "_" + beta + "_malrr.mat";
-                save(fname, Z)
+                save(fname, 'Z','Ez','Ew','W','Wi')
             end
         end        
     end

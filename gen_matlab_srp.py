@@ -1,3 +1,5 @@
+import os
+
 # kinds = ["TPE", "tangent"]
 kinds = ["TPE"]
 alphas = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
@@ -7,7 +9,7 @@ dims = [5, 10, 20, 50, 100]
 
 def gen_job_srp(target, kind, dim, alpha, beta):
     func_name = "target_%s_%s_%s_%s_%s" % (target, kind, dim, int(alpha * 1000), int(beta * 1000))
-    srp_fname = "scripts/target_%s_%s_%s_%s_%s.m" % (target, kind, dim, int(alpha * 1000), int(beta * 1000))
+    srp_fname = os.path.join("scripts", "%s.m" % func_name)
     srp = open(srp_fname, "w")
     srp.write("function %s\n" % func_name)
     srp.write("clear;\n")
@@ -34,8 +36,8 @@ def gen_job_srp(target, kind, dim, alpha, beta):
     srp.write("save(fname, 'Z','Ez','Ew','W','Wi')\n")
     srp.close()
 
-    job_fname = "scripts/target_%s_%s_%s_%s_%s.sge" % (target, kind, dim, alpha, beta)
-    job_file = open(job_fname, "w")
+    job_fname = "target_%s_%s_%s_%s_%s.sge" % (target, kind, dim, alpha, beta)
+    job_file = open(os.path.join("scripts", job_fname), "w")
     job_file.write("#!/bin/bash\n")
     job_file.write("# $ -P tale\n")
     job_file.write("# $ -q tale.q\n")
