@@ -17,22 +17,24 @@ import numpy as np
 from numpy.linalg import multi_dot
 from sklearn.metrics.pairwise import pairwise_kernels
 
+
 # rbf width paramter
 def width_rbf(X):
     n = X.shape[0]
     Xmed = X
 
-    G = np.sum(Xmed*Xmed, 1).reshape(n,1)
-    Q = np.tile(G, (1, n) )
-    R = np.tile(G.T, (n, 1) )
+    G = np.sum(Xmed*Xmed, 1).reshape(n, 1)
+    Q = np.tile(G, (1, n))
+    R = np.tile(G.T, (n, 1))
 
-    dists = Q + R - 2* np.dot(Xmed, Xmed.T)
+    dists = Q + R - 2 * np.dot(Xmed, Xmed.T)
     dists = dists - np.tril(dists)
     dists = dists.reshape(n**2, 1)
 
-    width_x = np.sqrt( 0.5 * np.median(dists[dists>0]))
+    width_x = np.sqrt(0.5 * np.median(dists[dists > 0]))
     
     return width_x
+
 
 # rbf kernel matrix
 def rbf_dot(pattern1, pattern2, deg):
@@ -45,16 +47,18 @@ def rbf_dot(pattern1, pattern2, deg):
     Q = np.tile(G, (1, size2[0]))
     R = np.tile(H.T, (size1[0], 1))
 
-    H = Q + R - 2* np.dot(pattern1, pattern2.T)
+    H = Q + R - 2 * np.dot(pattern1, pattern2.T)
 
     H = np.exp(-H/2/(deg**2))
     return H
+
 
 # mask out test labels
 def label_information(Y, test_ind):
     Y_cp = Y.copy()
     Y_cp[test_ind, :] = [0,0]
     return Y_cp
+
 
 # Maximum Independene Domain Adaptation
 def MIDA(X, D, Y=None, mu = 0.1, gamma_y=0.1, h=1035, labels=False):
@@ -101,13 +105,13 @@ def MIDA(X, D, Y=None, mu = 0.1, gamma_y=0.1, h=1035, labels=False):
         ind = eigs.argsort()[-h:][::-1]
         W = eigv[:, ind]
 
-
     # projected features
     Z = np.dot(W.T, K_x).T
 
     return Z
 
-def site_information_mat(data, num_subjects = 1035, num_domains = 20):
+
+def site_information_mat(data, num_subjects = 1035, num_domains=20):
 
     Y = data[:,1].reshape((num_subjects, 1))
     domain_features = np.zeros((num_subjects, num_domains))
@@ -117,6 +121,7 @@ def site_information_mat(data, num_subjects = 1035, num_domains = 20):
 
     return domain_features
 
+
 def normalise_features(X_orig):
-    X = X_orig -  X_orig.mean(axis=0)
+    X = X_orig - X_orig.mean(axis=0)
     return X

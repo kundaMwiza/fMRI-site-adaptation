@@ -53,17 +53,24 @@ def fetch_filenames(subject_ids, file_type, atlas, data_folder):
     # data_folder = data_path.get_data_folder()
     # Fill list with requested file paths
     for i in range(len(subject_ids)):
+        print(subject_ids[i])
         os.chdir(data_folder)
-        try:
-            try:
-                os.chdir(data_folder)
-                filenames.append(glob.glob('*' + subject_ids[i] + filemapping[file_type])[0])
-            except:
-                os.chdir(data_folder + '/' + subject_ids[i])
-                filenames.append(glob.glob('*' + subject_ids[i] + filemapping[file_type])[0])
-        except IndexError:
-            filenames.append('N/A')
-    return filenames
+        if len(glob.glob('*' + subject_ids[i] + filemapping[file_type])) > 0:
+            filenames.append(glob.glob('*' + subject_ids[i] + filemapping[file_type])[0])
+        elif len(glob.glob(subject_ids[i]+ '/' + '*' + subject_ids[i] + filemapping[file_type])) > 0:
+            os.chdir(data_folder + '/' + subject_ids[i])
+            filenames.append(glob.glob('*' + subject_ids[i] + filemapping[file_type])[0])
+        else:
+            subject_ids.pop(i)
+        # try:
+        #     try:
+        #         filenames.append(glob.glob('*' + subject_ids[i] + filemapping[file_type])[0])
+        #     except:
+        #         os.chdir(data_folder + '/' + subject_ids[i])
+        #         filenames.append(glob.glob('*' + subject_ids[i] + filemapping[file_type])[0])
+        # except IndexError:
+        #     filenames.append('N/A')
+    return filenames, subject_ids
 
 
 # Get timeseries arrays for list of subjects
