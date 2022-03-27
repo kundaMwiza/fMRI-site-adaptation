@@ -407,6 +407,7 @@ def train_10CV(params, subject_IDs, features, y_data, y, phenotype_ft, phenotype
     validation_ext = params['validation_ext']
     num_subjects = params["n_subs"]
     data_path = params["data_path"]
+    pheno_only = params["pheno_only"]
     if seed == 123:
         skf = StratifiedKFold(n_splits=10)
     else:
@@ -441,6 +442,8 @@ def train_10CV(params, subject_IDs, features, y_data, y, phenotype_ft, phenotype
         else:
             best_model = grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=phenotype_ft)
             print('best parameters from 5CV grid search: \n', best_model)
+            if pheno_only:
+                features = phenotype_ft
             x_data = features
 
         if add_phenotypes:

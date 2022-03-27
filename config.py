@@ -22,7 +22,7 @@ _C.DATASET.BASE_DIR = 'ABIDE_pcp/cpac/filt_noglobal/'
 _C.DATASET.ATLAS = "cc200"
 _C.DATASET.PHENO_FILE = 'ABIDE_pcp/Phenotypic_V1_0b_preprocessed1.csv'
 _C.DATASET.PIPELINE = "cpac"
-_C.DATASET.PHENO_ONLY = True
+_C.DATASET.PHENO_ONLY = False
 # ---------------------------------------------------------------------------- #
 # ML METHOD SETUP
 # ---------------------------------------------------------------------------- #

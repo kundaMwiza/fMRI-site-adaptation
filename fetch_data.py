@@ -73,34 +73,62 @@ def main():
 
     files = ['rois_' + atlas]
 
-    filemapping = {'func_preproc': 'func_preproc.nii.gz', files[0]: files[0] + '.1D'}
+    # filemapping = {'func_preproc': 'func_preproc.nii.gz', files[0]: files[0] + '.1D'}
 
-    if not os.path.exists(data_folder):
-        os.makedirs(data_folder)
-    shutil.copyfile('./subject_ids.txt', os.path.join(data_folder, 'subject_ids.txt'))
+    # if not os.path.exists(data_folder):
+    #     os.makedirs(data_folder)
+    # shutil.copyfile('./subject_ids.txt', os.path.join(data_folder, 'subject_ids.txt'))
 
     # Download database files
-    if download:
+    phenotype_file = os.path.join(root_dir, "ABIDE_pcp/Phenotypic_V1_0b_preprocessed1.csv")
+    if download or not os.path.exists(phenotype_file):
         datasets.fetch_abide_pcp(data_dir=root_dir, pipeline=pipeline, band_pass_filtering=True,
                                  global_signal_regression=False, derivatives=files, quality_checked=cfg.DATASET.QC)
 
-    subject_ids = reader.get_ids(data_folder)
-    subject_ids = subject_ids.tolist()
+    phenotype_df = reader.get_phenotype(phenotype_file)
+    # fnames = phenotype_df["FILE_ID"].values
 
+    # subject_ids = reader.get_ids(data_folder)
+    # subject_ids = subject_ids.tolist()
+    subject_ids = []
     # Create a folder for each subject
-    for s, fname in zip(subject_ids, reader.fetch_filenames(subject_ids, files[0], atlas, data_folder)):
-        subject_folder = os.path.join(data_folder, s)
+    for i in phenotype_df.index:
+        sub_id = phenotype_df.loc[i, "SUB_ID"]
+
+        subject_folder = os.path.join(data_folder, "%s" % sub_id)
         if not os.path.exists(subject_folder):
             os.mkdir(subject_folder)
-
-        # Get the base filename for each subject
-        base = fname.split(files[0])[0]
-
-        # Move each subject file to the subject folder
         for fl in files:
-            if not os.path.exists(os.path.join(subject_folder, base + filemapping[fl])):
-                shutil.move(base + filemapping[fl], subject_folder)
+            fname = "%s_%s.1D" % (phenotype_df.loc[i, "FILE_ID"], fl)
+            data_file = os.path.join(data_folder, fname)
+            if os.path.exists(data_file) or os.path.exists(os.path.join(subject_folder, fname)):
+                subject_ids.append(sub_id)
+                if not os.path.exists(os.path.join(subject_folder, fname)):
+                    shutil.move(data_file, subject_folder)
 
+    sub_id_fpath = os.path.join(data_folder, "subject_ids.txt")
+    if not os.path.exists(sub_id_fpath):
+        f = open(sub_id_fpath, "w")
+        for sub_id_ in subject_ids:
+            f.write("%s\n" % sub_id_)
+        f.close()
+    else:
+        subject_ids = reader.get_ids(data_folder)
+        subject_ids = subject_ids.tolist()
+
+    # for s, fname in zip(subject_ids, reader.fetch_filenames(subject_ids, files[0], atlas, data_folder)):
+    #     subject_folder = os.path.join(data_folder, s)
+    #     if not os.path.exists(subject_folder):
+    #         os.mkdir(subject_folder)
+    #
+    #     # Get the base filename for each subject
+    #     base = fname.split(files[0])[0]
+    #
+    #     # Move each subject file to the subject folder
+    #     for fl in files:
+    #         if not os.path.exists(os.path.join(subject_folder, base + filemapping[fl])):
+    #             shutil.move(base + filemapping[fl], subject_folder)
+    #
     time_series = reader.get_timeseries(subject_ids, atlas, data_folder)
 
     # Compute and save connectivity matrices

@@ -1,12 +1,12 @@
 DATASET:
-  ROOT: "D:/ML_data/brain/qc"
-#  ROOT: "/media/shuo/MyDrive/data/brain/qc"
+#  ROOT: "D:/ML_data/brain/qc"
+  ROOT: "/media/shuo/MyDrive/data/brain/qc"
   QC: True
-  DOWNLOAD: False
+  DOWNLOAD: True
 #METHOD:
 #  ALGORITHM: "LR"
 OUTPUT:
-  ROOT: "D:/ML_data/brain/qc"
-  OUT_PATH: "D:/ML_data/brain/ABIDE_pcp/cpac/filt_noglobal/"
-#  ROOT: "/media/shuo/MyDrive/data/brain/qc"
-#  OUT_PATH: "/media/shuo/MyDrive/data/brain/qc/ABIDE_pcp/cpac/filt_noglobal/"
+#  ROOT: "D:/ML_data/brain/qc"
+#  OUT_PATH: "D:/ML_data/brain/ABIDE_pcp/cpac/filt_noglobal/"
+  ROOT: "/media/shuo/MyDrive/data/brain/qc"
+  OUT_PATH: "/media/shuo/MyDrive/data/brain/qc/ABIDE_pcp/cpac/filt_noglobal/"

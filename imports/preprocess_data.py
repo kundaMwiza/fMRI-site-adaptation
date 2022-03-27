@@ -343,3 +343,7 @@ def create_affinity_graph_from_scores(scores, subject_list, pheno_fpath):
         pheno_ft.insert(i, l, global_phenos[i], True)
 
     return pheno_ft
+
+
+def get_phenotype(pheno_file):
+    return pd.read_csv(pheno_file, index_col=0)
