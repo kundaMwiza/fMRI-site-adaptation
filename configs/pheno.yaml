@@ -1,9 +1,10 @@
 DATASET:
-#  ROOT: "D:/ML_data/brain/qc"
-  ROOT: "/media/shuo/MyDrive/data/brain/"
+  ROOT: "D:/ML_data/brain/qc"
+#  ROOT: "/media/shuo/MyDrive/data/brain/"
   DOWNLOAD: False
   PHENO_ONLY: True
 METHOD:
   MODEL: "raw"
   CONNECTIVITY: "TPE"
   LOVO: False
+  SEED: 81193
