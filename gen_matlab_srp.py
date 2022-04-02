@@ -31,7 +31,7 @@ def gen_job_srp(target, kind, dim, alpha, beta):
     srp.write("        iter_s = iter_s + 1;\n")
     srp.write("    end\n")
     srp.write("end\n")
-    srp.write("[Z,Ez,Ew,W,Wi] = maLRR(T, S, dim, 50, alpha, beta);\n")
+    srp.write("[Z,Ez,Ew,W,Wi] = maLRR(T, S, dim, 40, alpha, beta);\n")
     srp.write("fname = '/shared/tale2/Shared/data/abide/functionals/cpac/filt_noglobal/target_%s_%s_%s_%s_%s_malrr.mat';\n" % (target, kind, dim, alpha, beta))
     srp.write("save(fname, 'Z','Ez','Ew','W','Wi')\n")
     srp.close()
@@ -56,14 +56,16 @@ qsub_fname = "scripts/qsub.sh"
 qsub_file = open(qsub_fname, "w")
 for target in range(20):
     for kind in kinds:
-        for dim in dims:
-            job_fname = gen_job_srp(target, kind, dim, 1, 1)
-            qsub_file.write("qsub %s\n" % job_fname)
+        # for dim in dims:
+        #     job_fname = gen_job_srp(target, kind, dim, 1, 1)
+        #     qsub_file.write("qsub %s\n" % job_fname)
         # for alpha in alphas:
-        #     job_fname = gen_job_srp(target, kind, 100, alpha, 1)
-        #     qsub_file.write("qsub %s\n" % job_fname)
-        # for beta in betas:
-        #     job_fname = gen_job_srp(target, kind, 100, 1, beta)
-        #     qsub_file.write("qsub %s\n" % job_fname)
+        #     if alpha != 1:
+        #         job_fname = gen_job_srp(target, kind, 100, alpha, 1)
+        #         qsub_file.write("qsub %s\n" % job_fname)
+        for beta in betas:
+            if beta != 1:
+                job_fname = gen_job_srp(target, kind, 100, 1, beta)
+                qsub_file.write("qsub %s\n" % job_fname)
 
 qsub_file.close()
