@@ -29,13 +29,14 @@ accs = []
 accs_weighted = []
 for tgt in range(20):
     print('Target:', tgt)
+    src_sites = [site for site in range(20) if site != tgt]
     tgt_idx = np.where(site_label == tgt)[0]
     src_idx = [site_label == i for i in range(20) if i != tgt]
     x_tgt = X[tgt_idx]
     n_tgt = x_tgt.shape[0]
     y_tgt = y[tgt_idx]
     # x_src = np.concatenate([X[idx_.reshape(-1)] for idx_ in src_idx], axis=0)
-    y_src = np.concatenate([y[idx_.reshape(-1)] for idx_ in src_idx], axis=0)
+    # y_src = np.concatenate([y[idx_.reshape(-1)] for idx_ in src_idx], axis=0)
     best_dim = 100
     best_alpha = 1
     best_beta = 1
@@ -55,26 +56,47 @@ for tgt in range(20):
     #         best_dim = dim
     #         estimator = grid_search.best_estimator_
 
-    for alpha in alphas:
-        print('Alpha:', alpha)
-        malrr = sio.loadmat(root_dir + 'MALRR_FEAT/target_%s_TPE_100_%s_1_malrr.mat' % (tgt, alpha))
+    # for alpha in alphas:
+    #     print('Alpha:', alpha)
+    #     malrr = sio.loadmat(root_dir + 'MALRR_FEAT/target_%s_TPE_100_%s_1_malrr.mat' % (tgt, alpha))
+    #     w = malrr['W']
+    #     Z = malrr['Z'][0]
+    #     x_train = np.concatenate([np.linalg.multi_dot([Zi.T, x_tgt, w.T]) for Zi in Z], axis=0)
+    #     grid_search = GridSearchCV(estimator=LinearSVC(), param_grid={'C': [1, 5, 10]}, cv=5)
+    #     grid_search.fit(x_train, y_src)
+    #     print('Best score:', grid_search.best_score_)
+    #     if grid_search.best_score_ > best_score:
+    #         best_score = grid_search.best_score_
+    #         best_alpha = alpha
+    #         estimator = grid_search.best_estimator_
+
+    for beta in betas:
+        print('Beta:', beta)
+        malrr = sio.loadmat(root_dir + 'MALRR_FEAT/target_%s_TPE_100_1_%s_malrr.mat' % (tgt, beta))
         w = malrr['W']
         Z = malrr['Z'][0]
-        x_train = np.concatenate([np.linalg.multi_dot([Zi.T, x_tgt, w.T]) for Zi in Z], axis=0)
+        Wi = malrr['Wi'][0]
+        Ez = malrr['Ez'][0]
+        # x_train = np.concatenate([np.linalg.multi_dot([Zi.T, x_tgt, w.T]) for Zi in Z], axis=0)
+
+        x_train = np.concatenate([np.dot(X[site_label == src_sites[j]], Wi[j].T) - Ez[j].T for j in range(19)], axis=0)
+        y_train = np.concatenate([y[site_label == src_sites[j]] for j in range(19)], axis=0)
         grid_search = GridSearchCV(estimator=LinearSVC(), param_grid={'C': [1, 5, 10]}, cv=5)
-        grid_search.fit(x_train, y_src)
+        grid_search.fit(x_train, y_train)
         print('Best score:', grid_search.best_score_)
         if grid_search.best_score_ > best_score:
             best_score = grid_search.best_score_
-            best_alpha = alpha
+            best_alpha = beta
             estimator = grid_search.best_estimator_
 
     malrr = sio.loadmat(root_dir + 'MALRR_FEAT/target_%s_TPE_%s_%s_%s_malrr.mat' % (tgt, best_dim, best_alpha,
                                                                                     best_beta))
     w = malrr['W']
     Z = malrr['Z'][0]
-    x_train = np.concatenate([np.linalg.multi_dot([Zi.T, x_tgt, w.T]) for Zi in Z], axis=0)
-    estimator.fit(x_train, y_src)
+    Wi = malrr['Wi'][0]
+    Ez = malrr['Ez'][0]
+    x_train = np.concatenate([np.dot(X[site_label == src_sites[j]], Wi[j].T) - Ez[j].T for j in range(19)], axis=0)
+    y_train = np.concatenate([y[site_label == src_sites[j]] for j in range(19)], axis=0)
     x_test = np.dot(x_tgt, w.T)
     y_pred = estimator.predict(x_test)
     acc = accuracy_score(y_tgt, y_pred)

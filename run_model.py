@@ -17,6 +17,8 @@
 # import sys
 # import argparse
 # import pandas as pd
+# import scipy.io as sio
+# from sklearn.preprocessing import LabelEncoder
 import os
 import numpy as np
 from imports import preprocess_data as reader
@@ -138,7 +140,7 @@ def main():
     pheno_ft = reader.preprocess_phenotypes(pheno_ft, params)
 
     # le = LabelEncoder()
-    # site_label = le.fit_transform(pheno_ft["SITE_ID"].values)
+    # site_label = le.fit_transform(pheno_ft2["SITE_ID"].values)
     # out_site_file = os.path.join(cfg.OUTPUT.OUT_PATH, "site_label.mat")
     # sio.savemat(out_site_file, {'site_label': site_label})
 

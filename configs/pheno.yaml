@@ -1,6 +1,6 @@
 DATASET:
 #  ROOT: "D:/ML_data/brain/qc"
-  ROOT: "/media/shuo/MyDrive/data/brain/"
+  ROOT: "/media/shuo/MyDrive/data/brain/qc"
   DOWNLOAD: False
   PHENO_ONLY: True
 METHOD:
