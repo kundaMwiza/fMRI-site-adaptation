@@ -1,6 +1,6 @@
 # Improving Multi-Site Autism Classification via Site-Dependence Minimization and Second-Order Functional Connectivity
 
-This repository provides a python implementation of machine learning approach described in our TMI paper [Improving Multi-Site Autism Classification via Site-Dependence Minimization and Second-Order Functional Connectivity.](https://www.biorxiv.org/content/10.1101/2020.02.01.930073v1)
+This repository provides a python implementation of machine learning approach described in our TMI paper [Improving Multi-Site Autism Classification via Site-Dependence Minimization and Second-Order Functional Connectivity.](https://ieeexplore.ieee.org/document/9874890)
 
 ## Download required packages
 ```
@@ -27,8 +27,9 @@ The default functional connectivity here is tangent Pearson embedding and is com
     @article{kunda2022improving,
       title={Improving Multi-Site Autism Classification via Site-Dependence Minimization and Second-Order Functional Connectivity},
       author={Kunda, Mwiza and Zhou, Shuo and Gong, Gaolang and Lu, Haiping},
-      journal={IEEE transactions on medical imaging},
+      journal={IEEE Transactions on Medical Imaging},
       year={2022},
-      publisher={IEEE}
+      publisher={IEEE},
+      doi={10.1109/TMI.2022.3203899}
     }
 ```

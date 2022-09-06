@@ -1,15 +1,20 @@
 import os
+import sys
 import numpy as np
 import pandas as pd
-from imports import preprocess_data as reader
-from imports.MIDA import MIDA
-# from imports.preprocess_data import get_timeseries, get_ids
+
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from nilearn import connectome, plotting
-# from imports.utils import str2bool
+
 import warnings
 import time
+
+sys.path.append('../')
+# from imports.utils import str2bool
+# from imports.preprocess_data import get_timeseries, get_ids
+from imports import preprocess_data as reader
+from imports.MIDA import MIDA
 from imports.utils import arg_parse
 from config import get_cfg_defaults
 
