@@ -15,85 +15,128 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from nilearn import datasets
-import argparse
-from imports import preprocess_data as Reader
+# import argparse
+from imports import preprocess_data as reader
+# from imports.utils import str2bool
 import os
 import shutil
-import sys
+# import sys
+from imports.utils import arg_parse
+from config import get_cfg_defaults
 
 # Input data variables
-root_folder = '/path/to/data/'
-data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
+# root_folder = '/path/to/data/'
+# root_folder = "/media/shuo/MyDrive/data/brain"
+# root_folder = "D:/ML_data/brain/qc"
+# data_folder = os.path.join(root_folder, 'ABIDE_pcp/cpac/filt_noglobal/')
 
-def str2bool(v):
-    if isinstance(v, bool):
-       return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 def main():
+    args = arg_parse()
 
-        parser = argparse.ArgumentParser(description='Download ABIDE data and compute functional connectivity matrices')
-        parser.add_argument('--pipeline', default='cpac', type=str, help='Pipeline to preprocess ABIDE data. Available options are ccs, cpac, dparsf and niak.'
-                                                                        ' default: cpac.')
-        parser.add_argument('--atlas', default='cc200', help='Brain parcellation atlas. Options: ho, cc200 and cc400, default: cc200.')
-        parser.add_argument('--connectivity', default='correlation', type=str, help='Type of connectivity used for network '
-                                                                        'construction '
-                                                                        'options: correlation, partial correlation, '
-                                                                        'covariance, default: correlation.')
-        parser.add_argument('--download', default=True, type=str2bool, help='Dowload data or just compute functional connectivity. default: True')
-        args = parser.parse_args()
-        print(args)
+    # ---- setup configs ----
+    cfg = get_cfg_defaults()
+    cfg.merge_from_file(args.cfg)
+    cfg.freeze()
+    print(cfg)
 
-        params = dict()
+    # parser = argparse.ArgumentParser(description='Download ABIDE data and compute functional connectivity matrices')
+    # parser.add_argument('--pipeline', default='cpac', type=str,
+    #                     help='Pipeline to preprocess ABIDE data. Available options are ccs, cpac, dparsf and niak. '
+    #                          'Default: cpac.')
+    # parser.add_argument('--atlas', default='cc200', help='Brain parcellation atlas. Options: ho, cc200 and cc400, '
+    #                                                      'default: cc200.')
+    # parser.add_argument('--connectivity', default='correlation', type=str,
+    #                     help='Type of connectivity used for network construction options: correlation, '
+    #                          'partial correlation, covariance, tangent, TPE. Default: correlation.')
+    # parser.add_argument('--download', default=True, type=str2bool,
+    #                     help='Dowload data or just compute functional connectivity. default: True')
+    # args = parser.parse_args()
+    # print(args)
 
-        pipeline = args.pipeline
-        atlas = args.atlas
-        connectivity = args.connectivity
-        download = args.download
+    # params = dict()
 
-        # Files to fetch
-        
-        files = ['rois_' + atlas]
+    # pipeline = args.pipeline
+    # atlas = args.atlas
+    # connectivity = args.connectivity
+    # download = args.download
 
+    pipeline = cfg.DATASET.PIPELINE
+    atlas = cfg.DATASET.ATLAS
+    connectivity = cfg.METHOD.CONNECTIVITY
+    download = cfg.DATASET.DOWNLOAD
 
-        filemapping = {'func_preproc': 'func_preproc.nii.gz',
-                       files[0]: files[0] + '.1D'}
+    root_dir = cfg.DATASET.ROOT
+    data_folder = os.path.join(root_dir, cfg.DATASET.BASE_DIR)
 
-        if not os.path.exists(data_folder): os.makedirs(data_folder)
-        shutil.copyfile('./subject_IDs.txt', os.path.join(data_folder, 'subject_IDs.txt'))
+    # Files to fetch
 
-        # Download database files
-        if download == True:
-                abide = datasets.fetch_abide_pcp(data_dir=root_folder, pipeline=pipeline,
-                                                band_pass_filtering=True, global_signal_regression=False, derivatives=files, quality_checked=False)                                
+    files = ['rois_' + atlas]
 
-        subject_IDs = Reader.get_ids()
-        subject_IDs = subject_IDs.tolist()
+    # filemapping = {'func_preproc': 'func_preproc.nii.gz', files[0]: files[0] + '.1D'}
 
-        # Create a folder for each subject
-        for s, fname in zip(subject_IDs, Reader.fetch_filenames(subject_IDs, files[0], atlas)):
-                subject_folder = os.path.join(data_folder, s)     
-                if not os.path.exists(subject_folder):
-                        os.mkdir(subject_folder)
+    # if not os.path.exists(data_folder):
+    #     os.makedirs(data_folder)
+    # shutil.copyfile('./subject_ids.txt', os.path.join(data_folder, 'subject_ids.txt'))
 
-                # Get the base filename for each subject
-                base = fname.split(files[0])[0]
+    # Download database files
+    phenotype_file = os.path.join(root_dir, "ABIDE_pcp/Phenotypic_V1_0b_preprocessed1.csv")
+    if download or not os.path.exists(phenotype_file):
+        datasets.fetch_abide_pcp(data_dir=root_dir, pipeline=pipeline, band_pass_filtering=True,
+                                 global_signal_regression=False, derivatives=files, quality_checked=cfg.DATASET.QC)
 
-                # Move each subject file to the subject folder
-                for fl in files:
-                        if not os.path.exists(os.path.join(subject_folder, base + filemapping[fl])):
-                                shutil.move(base + filemapping[fl], subject_folder)
+    phenotype_df = reader.get_phenotype(phenotype_file)
+    # fnames = phenotype_df["FILE_ID"].values
 
-        time_series = Reader.get_timeseries(subject_IDs, atlas)
+    # subject_ids = reader.get_ids(data_folder)
+    # subject_ids = subject_ids.tolist()
+    subject_ids = []
+    # Create a folder for each subject
+    for i in phenotype_df.index:
+        sub_id = phenotype_df.loc[i, "SUB_ID"]
 
-        # Compute and save connectivity matrices
-        if connectivity in ['correlation', 'partial correlation', 'covariance']:
-                Reader.subject_connectivity(time_series, subject_IDs, atlas, connectivity)
+        subject_folder = os.path.join(data_folder, "%s" % sub_id)
+        if not os.path.exists(subject_folder):
+            os.mkdir(subject_folder)
+        for fl in files:
+            fname = "%s_%s.1D" % (phenotype_df.loc[i, "FILE_ID"], fl)
+            data_file = os.path.join(data_folder, fname)
+            if os.path.exists(data_file) or os.path.exists(os.path.join(subject_folder, fname)):
+                subject_ids.append(sub_id)
+                if not os.path.exists(os.path.join(subject_folder, fname)):
+                    shutil.move(data_file, subject_folder)
+
+    sub_id_fpath = os.path.join(data_folder, "subject_ids.txt")
+    if not os.path.exists(sub_id_fpath):
+        f = open(sub_id_fpath, "w")
+        for sub_id_ in subject_ids:
+            f.write("%s\n" % sub_id_)
+        f.close()
+    else:
+        subject_ids = reader.get_ids(data_folder)
+        subject_ids = subject_ids.tolist()
+
+    # for s, fname in zip(subject_ids, reader.fetch_filenames(subject_ids, files[0], atlas, data_folder)):
+    #     subject_folder = os.path.join(data_folder, s)
+    #     if not os.path.exists(subject_folder):
+    #         os.mkdir(subject_folder)
+    #
+    #     # Get the base filename for each subject
+    #     base = fname.split(files[0])[0]
+    #
+    #     # Move each subject file to the subject folder
+    #     for fl in files:
+    #         if not os.path.exists(os.path.join(subject_folder, base + filemapping[fl])):
+    #             shutil.move(base + filemapping[fl], subject_folder)
+    #
+    time_series = reader.get_timeseries(subject_ids, atlas, data_folder)
+
+    # Compute and save connectivity matrices
+    # if connectivity in ['correlation', 'partial correlation', 'covariance']:
+    if connectivity in ["correlation", 'partial correlation', 'covariance', 'tangent', "TPE"]:
+        # reader.subject_connectivity(time_series, subject_ids, atlas, connectivity)
+        reader.subject_connectivity(time_series, atlas, connectivity, save=True, out_path=cfg.OUTPUT.OUT_PATH)
+
 
 if __name__ == '__main__':
-        main()
+    main()
