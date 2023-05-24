@@ -23,7 +23,6 @@ import os
 import numpy as np
 from imports import preprocess_data as reader
 from imports import train as train
-# from imports.utils import str2bool
 import warnings
 from imports.utils import arg_parse
 from config import get_cfg_defaults
@@ -32,31 +31,6 @@ warnings.filterwarnings("ignore")
 
 
 def main():
-    # parser = argparse.ArgumentParser(description='Classification of the ABIDE dataset using a Ridge classifier. MIDA '
-    #                                              'is used to minimize the distribution mismatch between ABIDE sites')
-    # parser.add_argument('--atlas', default='cc200', help='Atlas for network construction (node definition) options: '
-    #                                                      'ho, cc200, cc400, default: cc200.')
-    # parser.add_argument('--model', default='MIDA', type=str, help='Options: MIDA, raw. default: MIDA.')
-    # parser.add_argument('--algorithm', default='Ridge', type=str, help='Options: Ridge, LR (Logistic regression), '
-    #                                                                    'SVM (Support vector machine). default: Ridge.')
-    # parser.add_argument('--phenotypes', default=True, type=str2bool, help='Add phenotype features. default: True.')
-    # parser.add_argument('--KHSIC', default=True, type=str2bool, help='Compute kernel statistical test of independence '
-    #                                                                  'between features and site, default True.')
-    # parser.add_argument('--seed', default=123, type=int, help='Seed for random initialisation. default: 1234.')
-    # parser.add_argument('--connectivity', default='TPE', type=str, help='Type of connectivity used for network '
-    #                                                                     'construction. options: correlation, '
-    #                                                                     'TE(tangent embedding), TPE(tangent pearson '
-    #                                                                     'embedding), default: TPE.')
-    # parser.add_argument('--leave_one_out', default=False, type=str2bool,
-    #                     help='leave one site out CV instead of 10CV. Default: False.')
-    # parser.add_argument('--filename', default='tangent', type=str, help='filename for output file. default: tangent.')
-    # parser.add_argument('--ensemble', default=False, type=str2bool, help='Leave one site out, use ensemble MIDA/raw. '
-    #                                                                      'Default: False')
-    #
-    # args = parser.parse_args()
-    # print('Arguments: \n', args)
-    #
-
     args = arg_parse()
     # ---- setup configs ----
     cfg = get_cfg_defaults()
@@ -90,7 +64,7 @@ def main():
     params["pheno_only"] = cfg.DATASET.PHENO_ONLY
 
     # 10 Fold CV or leave one site out CV
-    params['leave_one_out'] = cfg.METHOD.LOVO
+    params['leave_one_out'] = cfg.METHOD.LOSO
     if params['leave_one_out']:
         params['validation_ext'] = 'LOCV'
     else:
