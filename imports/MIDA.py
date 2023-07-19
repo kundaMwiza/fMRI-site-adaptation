@@ -69,7 +69,7 @@ def MIDA(X, D, y=None, kernel="rbf", mu=0.1, gamma_y=0.1, h=1035, augment=False,
     D : {array-like}, domain feature matrix (n x num_domains)
     y : {array-like}, label information matrix (n x 2), default None.
     mu : covariance maximisation parameter
-    gamma_y : dependence on label information paramter
+    gamma_y : dependence on label information parameter
     h  : dimensionality of projected samples
 
     Returns:

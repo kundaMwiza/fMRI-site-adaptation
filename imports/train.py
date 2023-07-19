@@ -117,7 +117,7 @@ def grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=N
         for mu in mu_vals:
             for h in h_vals:
                 x_data = features
-                x_data = MIDA.MIDA(x_data, domain_ft, mu=mu, h=h, labels=False)
+                x_data = MIDA.MIDA(x_data, domain_ft, mu=mu, h=h, y=None)
                 if add_phenotypes:
                     x_data = np.concatenate([x_data, phenotype_ft], axis=1)
                 clf = GridSearchCV(alg, parameters, cv=5)
@@ -205,7 +205,7 @@ def leave_one_site_out_ensemble(params, subject_ids, features, y_data, y, phenot
                 best_model = grid_search(params, train_ind, test_ind, features[ft], y, y_data,
                                          phenotype_ft=phenotype_ft, domain_ft=domain_ft)
                 print('for', connectivities[ft], ', best parameters from 5CV grid search are: \n', best_model)
-                x_data = MIDA.MIDA(features[ft], domain_ft, mu=best_model['mu'], h=best_model['h'], labels=False)
+                x_data = MIDA.MIDA(features[ft], domain_ft, mu=best_model['mu'], h=best_model['h'], y=None)
                 best_model.pop('mu')
                 best_model.pop('h')
                 best_model.pop('acc')
@@ -327,7 +327,7 @@ def leave_one_site_out(params, subject_ids, features, y_data, y, phenotype_ft, p
                 best_model = grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=phenotype_ft,
                                          domain_ft=domain_ft)
                 print('best parameters from 5CV grid search: \n', best_model)
-                x_data = MIDA.MIDA(features, domain_ft, mu=best_model['mu'], h=best_model['h'], labels=False)
+                x_data = MIDA.MIDA(features, domain_ft, mu=best_model['mu'], h=best_model['h'], y=None)
                 best_model.pop('mu')
                 best_model.pop('h')
             else:
@@ -435,7 +435,7 @@ def train_10CV(params, subject_IDs, features, y_data, y, phenotype_ft, phenotype
             best_model = grid_search(params, train_ind, test_ind, features, y, y_data, phenotype_ft=phenotype_ft,
                                      domain_ft=domain_ft)
             print('best parameters from 5CV grid search: \n', best_model)
-            x_data = MIDA.MIDA(features, domain_ft, mu=best_model['mu'], h=best_model['h'], labels=False)
+            x_data = MIDA.MIDA(features, domain_ft, mu=best_model['mu'], h=best_model['h'], y=None)
             best_model.pop('mu')
             best_model.pop('h')
 
